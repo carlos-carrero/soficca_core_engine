@@ -1,0 +1,9 @@
+{
+  "state": {
+    "desire": "low",
+    "stress": "high"
+  },
+  "context": {
+    "source": "USER"
+  }
+}

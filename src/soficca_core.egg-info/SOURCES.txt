@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+src/soficca_core/__init__.py
+src/soficca_core/decision_contract.py
+src/soficca_core/engine.py
+src/soficca_core/errors.py
+src/soficca_core/normalization.py
+src/soficca_core/rules.py
+src/soficca_core/safety_en.py
+src/soficca_core/safety_policy.py
+src/soficca_core/trace.py
+src/soficca_core/validation.py
+src/soficca_core.egg-info/PKG-INFO
+src/soficca_core.egg-info/SOURCES.txt
+src/soficca_core.egg-info/dependency_links.txt
+src/soficca_core.egg-info/top_level.txt
+tests/test_engine_v03.py

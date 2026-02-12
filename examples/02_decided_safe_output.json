@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "errors": [],
+  "versions": {
+    "engine": "0.3.0",
+    "ruleset": "0.3.0",
+    "safety_policy": "0.3.0"
+  },
+  "decision": {
+    "status": "DECIDED",
+    "path": null,
+    "flags": [],
+    "reasons": [],
+    "recommendations": [],
+    "required_fields": []
+  },
+  "safety": {
+    "status": "CLEAR",
+    "action": "NONE",
+    "triggers": [],
+    "user_guidance_required_fields": [],
+    "policy_version": "0.3.0"
+  },
+  "trace": {
+    "policy_trace": {
+      "evaluated": [
+        "POLICY_SELF_HARM_V1",
+        "POLICY_ACUTE_CARDIORESP_V1",
+        "POLICY_NEURO_V1",
+        "POLICY_PRIAPISM_V1",
+        "POLICY_SEVERE_PAIN_BLEEDING_V1"
+      ],
+      "triggered": []
+    },
+    "rules_evaluated": [
+      "RULE_INTERMITTENT_MEDS_OK_V1",
+      "RULE_MORNING_REDUCED_EVAL_PARALLEL_V1",
+      "RULE_PERSISTENT_EVAL_FIRST_V1",
+      "RULE_PERSISTENT_MEDS_REQUIRES_EVAL_PARALLEL_V1"
+    ],
+    "rules_triggered": [],
+    "evidence": {
+      "frequency": {
+        "value": "daily",
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      },
+      "desire": {
+        "value": "low",
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      },
+      "stress": {
+        "value": "high",
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      },
+      "morning_erection": {
+        "value": "sometimes",
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      },
+      "wants_meds": {
+        "value": true,
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      },
+      "country": {
+        "value": "CO",
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      },
+      "safety_flags": {
+        "value": [],
+        "source": "USER",
+        "recency_days": 1,
+        "confidence": 1,
+        "contradiction": false
+      }
+    },
+    "uncertainty_notes": []
+  }
+}

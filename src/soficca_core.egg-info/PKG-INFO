@@ -1,0 +1,59 @@
+Metadata-Version: 2.4
+Name: soficca-core
+Version: 0.3.0
+Summary: Soficca Core Engine - decision-first clinical decision engine (demo)
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+
+# Soficca Core Engine (Decision-First) — v0.3
+
+**Soficca Core Engine** is an infrastructure-grade, deterministic **clinical decision engine**.
+It evaluates **structured clinical states** and returns a stable **Decision Report** with:
+
+- **Decision outcome** (including explicit non-decision)
+- **Versioned safety policy** (safety overrides everything)
+- **Formal trace** (rules evaluated/triggered + evidence + uncertainty notes)
+- **Evaluation harness** (golden cases with PASS/FAIL)
+
+> This repo intentionally does **not** present a chat demo.  
+> The demo is **behavior + governance**, not UX.
+
+## Quickstart
+
+### Run golden-case evaluation
+```bash
+python run_evaluation.py
+```
+
+### Run tests
+```bash
+pytest -q
+```
+
+## Contract
+- Output contract: `CONTRACT.md`
+- JSON Schema: `contract/decision_report_v0_3.schema.json`
+
+## Input format
+```json
+{
+  "state": {
+    "frequency": "sometimes",
+    "desire": "present",
+    "stress": "high",
+    "morning_erection": "normal",
+    "wants_meds": true,
+    "country": "Colombia",
+    "safety_flags": []
+  },
+  "context": { "source": "USER" }
+}
+```
+
+## Output
+See `contract/decision_report_v0_3.schema.json` for the exact schema.
+
+## Governance artifacts
+- Safety policy changelog: `POLICYLOG.md`
+- Golden cases: `golden_cases.json`
+- Evaluation report output: `evaluation_report.json`

@@ -1,0 +1,15 @@
+{
+  "state": {
+    "frequency": "daily",
+    "desire": "low",
+    "stress": "high",
+    "morning_erection": "sometimes",
+    "wants_meds": true,
+    "country": "CO",
+    "safety_flags": []
+  },
+  "context": {
+    "source": "USER",
+    "recency_days": 1
+  }
+}
