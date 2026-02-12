@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soficca.ai/schemas/decision_report_v0_3.json",
+  "title": "Soficca Decision Report v0.3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "errors",
+    "versions",
+    "decision",
+    "safety",
+    "trace"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "path"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine",
+        "ruleset",
+        "safety_policy"
+      ],
+      "properties": {
+        "engine": {
+          "type": "string"
+        },
+        "ruleset": {
+          "type": "string"
+        },
+        "safety_policy": {
+          "type": "string"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "path",
+        "flags",
+        "reasons",
+        "recommendations"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "DECIDED",
+            "NEEDS_MORE_INFO",
+            "CONFLICT",
+            "ESCALATED"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "PATH_MORE_QUESTIONS",
+            "PATH_EVAL_FIRST",
+            "PATH_MEDS_OK",
+            "PATH_ESCALATE_HUMAN",
+            null
+          ]
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommendations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "action",
+        "triggers",
+        "user_guidance_required_fields",
+        "policy_version"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "CLEAR",
+            "TRIGGERED"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "OVERRIDE_ESCALATE",
+            "OVERRIDE_BLOCK_RECS"
+          ]
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "user_guidance_required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policy_version": {
+          "type": "string"
+        }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_trace",
+        "rules_evaluated",
+        "rules_triggered",
+        "evidence",
+        "uncertainty_notes"
+      ],
+      "properties": {
+        "policy_trace": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evaluated",
+            "triggered"
+          ],
+          "properties": {
+            "evaluated": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "triggered": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "rules_evaluated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rules_triggered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "source",
+              "recency_days",
+              "confidence",
+              "contradiction"
+            ],
+            "properties": {
+              "value": {},
+              "source": {
+                "type": "string",
+                "enum": [
+                  "USER",
+                  "DEVICE",
+                  "CLINICIAN",
+                  "UNKNOWN"
+                ]
+              },
+              "recency_days": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "confidence": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "contradiction": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "uncertainty_notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,349 @@
+{
+  "schema_version": "golden_cases_v0_3",
+  "engine_target": "decision_report_v0_3",
+  "cases": [
+    {
+      "id": "SFTY_001_SELF_HARM",
+      "title": "Safety override: self-harm always escalates",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "high",
+          "morning_erection": "normal",
+          "wants_meds": true,
+          "country": "Colombia",
+          "safety_flags": [
+            "RED_FLAG_SELF_HARM"
+          ]
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "TRIGGERED",
+          "action": "OVERRIDE_ESCALATE"
+        },
+        "decision": {
+          "status": "ESCALATED",
+          "path": "PATH_ESCALATE_HUMAN"
+        },
+        "must_not_contain_recommendations_substrings": [
+          "Medication",
+          "sildenafil",
+          "tadalafil",
+          "options"
+        ]
+      }
+    },
+    {
+      "id": "SFTY_002_CHEST_PAIN",
+      "title": "Safety override: acute cardiorespiratory escalates",
+      "input": {
+        "state": {
+          "frequency": "always",
+          "desire": "present",
+          "stress": "moderate",
+          "morning_erection": "reduced",
+          "wants_meds": false,
+          "country": "Colombia",
+          "safety_flags": [
+            "RED_FLAG_ACUTE_CARDIORESP"
+          ]
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "TRIGGERED",
+          "action": "OVERRIDE_ESCALATE"
+        },
+        "decision": {
+          "status": "ESCALATED",
+          "path": "PATH_ESCALATE_HUMAN"
+        }
+      }
+    },
+    {
+      "id": "SFTY_003_PRIAPISM",
+      "title": "Safety override: priapism escalates",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "low",
+          "morning_erection": "normal",
+          "wants_meds": true,
+          "country": "Colombia",
+          "safety_flags": [
+            "RED_FLAG_PRIAPISM"
+          ]
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "TRIGGERED",
+          "action": "OVERRIDE_ESCALATE"
+        },
+        "decision": {
+          "status": "ESCALATED",
+          "path": "PATH_ESCALATE_HUMAN"
+        }
+      }
+    },
+    {
+      "id": "DEC_001_INTERMITTENT_MEDS_OK",
+      "title": "Intermittent pattern: meds OK",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "high",
+          "morning_erection": "normal",
+          "wants_meds": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "CLEAR"
+        },
+        "decision": {
+          "status": "DECIDED",
+          "path": "PATH_MEDS_OK"
+        },
+        "must_contain_rules_triggered": [
+          "RULE_INTERMITTENT_MEDS_OK_V1"
+        ]
+      }
+    },
+    {
+      "id": "DEC_002_INTERMITTENT_MEDS_NEEDS_EVAL_PARALLEL",
+      "title": "Intermittent + morning reduced: meds ok + eval parallel",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "moderate",
+          "morning_erection": "reduced",
+          "wants_meds": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "CLEAR"
+        },
+        "decision": {
+          "status": "DECIDED",
+          "path": "PATH_MEDS_OK"
+        },
+        "must_contain_flags": [
+          "needs_eval_parallel",
+          "physiology_signal"
+        ],
+        "must_contain_rules_triggered": [
+          "RULE_INTERMITTENT_MEDS_OK_V1",
+          "RULE_MORNING_REDUCED_EVAL_PARALLEL_V1"
+        ]
+      }
+    },
+    {
+      "id": "DEC_003_PERSISTENT_NO_MEDS_EVAL_FIRST",
+      "title": "Persistent + no meds request: eval first",
+      "input": {
+        "state": {
+          "frequency": "always",
+          "desire": "present",
+          "stress": "moderate",
+          "morning_erection": "normal",
+          "wants_meds": false
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "CLEAR"
+        },
+        "decision": {
+          "status": "DECIDED",
+          "path": "PATH_EVAL_FIRST"
+        },
+        "must_contain_flags": [
+          "persistent_pattern"
+        ],
+        "must_contain_rules_triggered": [
+          "RULE_PERSISTENT_EVAL_FIRST_V1"
+        ]
+      }
+    },
+    {
+      "id": "DEC_004_PERSISTENT_WANTS_MEDS_OK_WITH_EVAL_PARALLEL",
+      "title": "Persistent + wants meds: meds ok but eval parallel required",
+      "input": {
+        "state": {
+          "frequency": "always",
+          "desire": "present",
+          "stress": "high",
+          "morning_erection": "normal",
+          "wants_meds": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "safety": {
+          "status": "CLEAR"
+        },
+        "decision": {
+          "status": "DECIDED",
+          "path": "PATH_MEDS_OK"
+        },
+        "must_contain_flags": [
+          "needs_eval_parallel"
+        ],
+        "must_contain_rules_triggered": [
+          "RULE_PERSISTENT_MEDS_REQUIRES_EVAL_PARALLEL_V1"
+        ]
+      }
+    },
+    {
+      "id": "UNC_001_MISSING_FREQUENCY_NEEDS_MORE_INFO",
+      "title": "Missing frequency: needs more info",
+      "input": {
+        "state": {
+          "frequency": null,
+          "desire": "present",
+          "stress": "high",
+          "morning_erection": "normal",
+          "wants_meds": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision": {
+          "status": "NEEDS_MORE_INFO",
+          "path": null
+        },
+        "must_require_fields": [
+          "frequency"
+        ]
+      }
+    },
+    {
+      "id": "UNC_002_MISSING_MORNING_ERECTION_NEEDS_MORE_INFO",
+      "title": "Missing morning erection: needs more info",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "moderate",
+          "morning_erection": null,
+          "wants_meds": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision": {
+          "status": "NEEDS_MORE_INFO",
+          "path": null
+        },
+        "must_require_fields": [
+          "morning_erection"
+        ]
+      }
+    },
+    {
+      "id": "CNF_001_CONTRADICTION_FREQUENCY",
+      "title": "Contradiction: frequency conflict yields CONFLICT",
+      "input": {
+        "state": {
+          "frequency": "always",
+          "desire": "present",
+          "stress": "moderate",
+          "morning_erection": "normal",
+          "wants_meds": true,
+          "conflicts": [
+            {
+              "field": "frequency",
+              "a": "always",
+              "b": "sometimes",
+              "source_a": "USER",
+              "source_b": "USER"
+            }
+          ]
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision": {
+          "status": "CONFLICT",
+          "path": null
+        },
+        "must_contain_uncertainty_substrings": [
+          "conflict"
+        ]
+      }
+    },
+    {
+      "id": "GOV_001_VERSIONS_PRESENT_AND_TRACE_COMPLETE",
+      "title": "Governance: versions + trace completeness are enforced",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "low",
+          "morning_erection": "normal",
+          "wants_meds": false
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "must_have_versions": true,
+        "must_have_nonempty_rules_evaluated": true,
+        "must_have_nonempty_policy_evaluated": true
+      }
+    },
+    {
+      "id": "DET_001_DETERMINISM_HASH_STABLE",
+      "title": "Determinism: output hash stable for identical input",
+      "input": {
+        "state": {
+          "frequency": "sometimes",
+          "desire": "present",
+          "stress": "high",
+          "morning_erection": "normal",
+          "wants_meds": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "determinism_check": true
+      }
+    }
+  ]
+}
