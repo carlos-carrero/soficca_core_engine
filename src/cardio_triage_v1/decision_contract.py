@@ -23,7 +23,7 @@ from cardio_triage_v1.constants import (
 
 
 def build_base_report() -> Dict[str, Any]:
-    """Build a deterministic cardio v1 scaffold report (no clinical logic yet)."""
+    """Build a deterministic cardio v1 scaffold report."""
     return {
         "ok": True,
         "errors": [],
@@ -49,6 +49,10 @@ def build_base_report() -> Dict[str, Any]:
             "triggers": [],
             "policy_version": SAFETY_POLICY_VERSION,
             "safety_id": "NONE",
+            "has_red_flags": False,
+            "override_applied": False,
+            "severity": "NONE",
+            "flags": [],
         },
         "trace": {
             "policy_trace": {
@@ -60,6 +64,10 @@ def build_base_report() -> Dict[str, Any]:
             "evidence": {},
             "uncertainty_notes": ["Scaffold only: clinical logic not implemented."],
             "missing_fields": [],
+            "activated_rules": [],
+            "preliminary_route": None,
+            "final_route": None,
+            "override_reason": None,
         },
     }
 
@@ -100,18 +108,22 @@ def validate_report(report: Dict[str, Any]) -> List[str]:
 
     if safety.get("status") not in SAFETY_STATUSES:
         problems.append("safety.status invalid or missing")
-
     if safety.get("action") not in SAFETY_ACTIONS:
         problems.append("safety.action invalid or missing")
-
-    for key in ("triggers",):
-        if not isinstance(safety.get(key), list):
-            problems.append(f"safety.{key} must be list")
-
+    if not isinstance(safety.get("triggers"), list):
+        problems.append("safety.triggers must be list")
     if not isinstance(safety.get("policy_version"), str):
         problems.append("safety.policy_version must be string")
     if not isinstance(safety.get("safety_id"), str):
         problems.append("safety.safety_id must be string")
+    if not isinstance(safety.get("has_red_flags"), bool):
+        problems.append("safety.has_red_flags must be boolean")
+    if not isinstance(safety.get("override_applied"), bool):
+        problems.append("safety.override_applied must be boolean")
+    if not isinstance(safety.get("severity"), str):
+        problems.append("safety.severity must be string")
+    if not isinstance(safety.get("flags"), list):
+        problems.append("safety.flags must be list")
 
     if not isinstance(policy_trace.get("evaluated"), list):
         problems.append("trace.policy_trace.evaluated must be list")
@@ -127,6 +139,14 @@ def validate_report(report: Dict[str, Any]) -> List[str]:
         problems.append("trace.uncertainty_notes must be list")
     if not isinstance(trace.get("missing_fields"), list):
         problems.append("trace.missing_fields must be list")
+    if not isinstance(trace.get("activated_rules"), list):
+        problems.append("trace.activated_rules must be list")
+    if trace.get("preliminary_route") is not None and trace.get("preliminary_route") not in ALL_PATH_IDS:
+        problems.append("trace.preliminary_route invalid")
+    if trace.get("final_route") is not None and trace.get("final_route") not in ALL_PATH_IDS:
+        problems.append("trace.final_route invalid")
+    if trace.get("override_reason") is not None and not isinstance(trace.get("override_reason"), str):
+        problems.append("trace.override_reason must be string or null")
 
     if isinstance(decision.get("missing_fields"), list) and isinstance(trace.get("missing_fields"), list):
         if decision.get("missing_fields") != trace.get("missing_fields"):
@@ -135,8 +155,6 @@ def validate_report(report: Dict[str, Any]) -> List[str]:
     if safety.get("status") == "TRIGGERED":
         if decision.get("status") != "ESCALATED":
             problems.append("If safety.TRIGGERED, decision.status must be ESCALATED")
-        if decision.get("path") != PATH_ESCALATE_HUMAN:
-            problems.append("If safety.TRIGGERED, decision.path must be PATH_ESCALATE_HUMAN")
         if safety.get("action") != SAFETY_ACTION_OVERRIDE_ESCALATE:
             problems.append("If safety.TRIGGERED, safety.action must be OVERRIDE_ESCALATE")
 

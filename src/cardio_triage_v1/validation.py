@@ -2,8 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
+from cardio_triage_v1.constants import (
+    EMERGENCY_ROUTE,
+    SAFETY_ACTION_OVERRIDE_ESCALATE,
+    SAFETY_TRIGGERED,
+)
 from cardio_triage_v1.decision_contract import build_base_report
 from cardio_triage_v1.normalization import normalize_for_readiness
+from cardio_triage_v1.safety_policy import evaluate_safety
 from soficca_core.errors import make_error
 
 CORE_REQUIRED_FIELDS: List[str] = [
@@ -50,37 +56,21 @@ def get_missing_core_fields(normalized_state: Dict[str, Any]) -> List[str]:
     missing: List[str] = []
     for field in CORE_REQUIRED_FIELDS:
         value = normalized_state.get(field)
-        if value is None or value is False:
-            # composite readiness fields are booleans where False means unavailable
-            if field in {"prior_mi_or_known_cad", "current_meds_summary_or_none"}:
+        if field in {"prior_mi_or_known_cad", "current_meds_summary_or_none"}:
+            if value is not True:
                 missing.append(field)
             continue
-        if value == "":
+        if value is None or value == "":
             missing.append(field)
-
-    # explicit handling for scalar fields where zero can be valid, but None is not
-    for scalar in (
-        "age",
-        "pain_duration_minutes",
-        "systolic_bp",
-        "heart_rate",
-        "chest_pain_present",
-        "dyspnea",
-        "syncope",
-        "pain_character",
-        "pain_radiation",
-    ):
-        if scalar in CORE_REQUIRED_FIELDS and normalized_state.get(scalar) is None and scalar not in missing:
-            missing.append(scalar)
 
     return [f for f in CORE_REQUIRED_FIELDS if f in missing]
 
 
 def evaluate_readiness(input_data: Any) -> Dict[str, Any]:
-    """Stage-2 deterministic readiness evaluation.
+    """Stage-3 deterministic readiness + hard emergency override.
 
-    - No triage routing logic yet.
-    - Returns NEEDS_MORE_INFO when critical fields are missing.
+    - Missing critical fields: return NEEDS_MORE_INFO (stage-2 behavior).
+    - If complete: evaluate hard red flags and override to EMERGENCY_ROUTE when present.
     """
     report = build_base_report()
 
@@ -92,13 +82,15 @@ def evaluate_readiness(input_data: Any) -> Dict[str, Any]:
         report["decision"]["required_fields"] = ["state"]
         report["decision"]["missing_fields"] = ["state"]
         report["trace"]["missing_fields"] = ["state"]
-        report["trace"]["uncertainty_notes"].append("Missing required structured state payload.")
+        report["trace"]["uncertainty_notes"] = ["Missing required structured state payload."]
+        report["trace"]["final_route"] = None
         return report
 
     normalized = normalize_for_readiness(cleaned["state"])
     missing_fields = get_missing_core_fields(normalized)
 
     report["trace"]["evidence"] = {k: {"value": v} for k, v in normalized.items()}
+    report["trace"]["preliminary_route"] = None
 
     if missing_fields:
         report["decision"]["status"] = "NEEDS_MORE_INFO"
@@ -109,12 +101,38 @@ def evaluate_readiness(input_data: Any) -> Dict[str, Any]:
         report["trace"]["uncertainty_notes"] = [
             "Critical cardio fields missing; triage logic not executed.",
         ]
+        report["trace"]["final_route"] = None
         return report
 
+    # Stage-2 baseline readiness complete
     report["decision"]["status"] = "DECIDED"
     report["decision"]["decision_id"] = "READINESS_COMPLETE"
     report["decision"]["required_fields"] = []
     report["decision"]["missing_fields"] = []
     report["trace"]["missing_fields"] = []
     report["trace"]["uncertainty_notes"] = []
+
+    safety_eval = evaluate_safety(normalized)
+    report["trace"]["activated_rules"] = list(safety_eval["activated_rules"])
+    report["trace"]["override_reason"] = safety_eval["override_reason"]
+
+    report["safety"]["has_red_flags"] = safety_eval["has_red_flags"]
+    report["safety"]["override_applied"] = safety_eval["override_applied"]
+    report["safety"]["severity"] = safety_eval["severity"]
+    report["safety"]["flags"] = list(safety_eval["flags"])
+    report["safety"]["triggers"] = list(safety_eval["activated_rules"])
+
+    if safety_eval["override_applied"]:
+        report["decision"]["status"] = "ESCALATED"
+        report["decision"]["path"] = EMERGENCY_ROUTE
+        report["decision"]["decision_id"] = "EMERGENCY_OVERRIDE"
+        report["decision"]["flags"] = list(safety_eval["flags"])
+        report["safety"]["status"] = SAFETY_TRIGGERED
+        report["safety"]["action"] = SAFETY_ACTION_OVERRIDE_ESCALATE
+        report["safety"]["safety_id"] = "EMERGENCY_HARD_RED_FLAG"
+        report["trace"]["final_route"] = EMERGENCY_ROUTE
+    else:
+        report["trace"]["final_route"] = report["decision"].get("path")
+
+    report["trace"]["policy_trace"]["triggered"] = list(safety_eval["activated_rules"])
     return report

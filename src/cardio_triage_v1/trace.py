@@ -15,6 +15,10 @@ class TraceBuilder:
     evidence: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     uncertainty_notes: List[str] = field(default_factory=list)
     missing_fields: List[str] = field(default_factory=list)
+    activated_rules: List[str] = field(default_factory=list)
+    preliminary_route: Optional[str] = None
+    final_route: Optional[str] = None
+    override_reason: Optional[str] = None
 
     def add_rule_evaluated(self, rule_id: str) -> None:
         if rule_id not in self.rules_evaluated:
@@ -56,6 +60,16 @@ class TraceBuilder:
     def set_missing_fields(self, fields: List[str]) -> None:
         self.missing_fields = list(fields)
 
+    def set_routes(self, preliminary_route: Optional[str], final_route: Optional[str]) -> None:
+        self.preliminary_route = preliminary_route
+        self.final_route = final_route
+
+    def set_override_reason(self, reason: Optional[str]) -> None:
+        self.override_reason = reason
+
+    def set_activated_rules(self, activated_rules: List[str]) -> None:
+        self.activated_rules = list(activated_rules)
+
     def build(self) -> Dict[str, Any]:
         return {
             "policy_trace": {
@@ -67,4 +81,8 @@ class TraceBuilder:
             "evidence": self.evidence,
             "uncertainty_notes": self.uncertainty_notes,
             "missing_fields": self.missing_fields,
+            "activated_rules": self.activated_rules,
+            "preliminary_route": self.preliminary_route,
+            "final_route": self.final_route,
+            "override_reason": self.override_reason,
         }

@@ -34,6 +34,10 @@ def test_stable_decision_safety_trace_sections() -> None:
         "triggers",
         "policy_version",
         "safety_id",
+        "has_red_flags",
+        "override_applied",
+        "severity",
+        "flags",
     }
     assert set(report["trace"].keys()) == set(TRACE_SECTION_KEYS)
 
