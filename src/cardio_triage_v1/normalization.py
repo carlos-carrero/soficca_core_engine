@@ -53,15 +53,18 @@ def _coerce_non_empty_text(value: Any) -> Optional[str]:
     return str(value).strip().lower() or None
 
 
-def _risk_factor_count(state: Dict[str, Any]) -> int:
+def _risk_factor_count(state: Dict[str, Any]) -> Optional[int]:
     if isinstance(state.get("risk_factors"), list):
         return len([x for x in state.get("risk_factors") if not _is_missing(x)])
     explicit_count = _coerce_int(state.get("cv_risk_factors_count"))
-    return explicit_count if isinstance(explicit_count, int) and explicit_count >= 0 else 0
+    if isinstance(explicit_count, int) and explicit_count >= 0:
+        return explicit_count
+    return None
 
 
 def normalize_for_readiness(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Deterministic extraction/coercion for stage-2/4 readiness and routing checks."""
+    """Deterministic extraction/coercion for readiness and routing checks."""
+    
     prior_mi = _coerce_bool(state.get("prior_mi"))
     known_cad = _coerce_bool(state.get("known_cad"))
 
@@ -88,8 +91,8 @@ def normalize_for_readiness(state: Dict[str, Any]) -> Dict[str, Any]:
         "heart_rate": _coerce_int(state.get("heart_rate")),
         "prior_mi": prior_mi,
         "known_cad": known_cad,
-        "prior_mi_or_known_cad": (prior_mi is not None) or (known_cad is not None),
+        "prior_mi_or_known_cad": (prior_mi is True) or (known_cad is True),
         "current_meds_summary": meds_summary,
         "current_meds_none": meds_none,
-        "current_meds_summary_or_none": (meds_summary is not None) or (meds_none is not None),
+        "current_meds_summary_or_none": (meds_summary is not None) or (meds_none is True),
     }

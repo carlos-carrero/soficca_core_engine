@@ -63,7 +63,11 @@ def get_missing_core_fields(normalized_state: Dict[str, Any]) -> List[str]:
     missing: List[str] = []
     for field in CORE_REQUIRED_FIELDS:
         value = normalized_state.get(field)
-        if field in {"prior_mi_or_known_cad", "current_meds_summary_or_none"}:
+        if field == "prior_mi_or_known_cad":
+            if normalized_state.get("prior_mi") is None and normalized_state.get("known_cad") is None:
+                missing.append(field)
+            continue
+        if field == "current_meds_summary_or_none":
             if value is not True:
                 missing.append(field)
             continue
@@ -177,10 +181,15 @@ def evaluate_readiness(input_data: Any) -> Dict[str, Any]:
     report["trace"]["missing_fields"] = []
     report["trace"]["uncertainty_notes"] = []
     report["trace"]["preliminary_route"] = routing["preliminary_route"]
-    report["trace"]["rules_triggered"] = list(routing["rules_triggered"])
+    routed_rules = list(routing["rules_triggered"])
+    report["trace"]["rules_triggered"] = routed_rules
 
     safety_eval = evaluate_safety(normalized)
-    report["trace"]["activated_rules"] = list(safety_eval["activated_rules"])
+    combined_activated_rules: List[str] = []
+    for rid in routed_rules + list(safety_eval["activated_rules"]):
+        if rid not in combined_activated_rules:
+            combined_activated_rules.append(rid)
+    report["trace"]["activated_rules"] = combined_activated_rules
     report["trace"]["override_reason"] = safety_eval["override_reason"]
 
     report["safety"]["has_red_flags"] = safety_eval["has_red_flags"]
