@@ -143,3 +143,45 @@ src/soficca_core/
 
 Soficca Core Engine is a **clinical decision-support system** prototype.  
 It is intended to support — not replace — professional clinical judgment.
+
+---
+
+## Cardio triage demo (v1)
+
+A separate deterministic cardiology demo engine lives in:
+- `src/cardio_triage_v1/`
+
+### Cardio API endpoint
+
+Run API:
+```bash
+uvicorn api.main:app --reload
+```
+
+Call cardio report endpoint:
+```bash
+POST /v1/cardio/report
+```
+
+Cardio contract/schema endpoint:
+```bash
+GET /v1/cardio/contract
+```
+
+### Canonical cardio scenarios
+
+Stored in:
+- `examples/cardio_v1_scenarios.json`
+
+Scenarios include:
+- `NEEDS_MORE_INFO`
+- `ROUTINE_REVIEW`
+- `URGENT_ESCALATION`
+- `EMERGENCY_OVERRIDE` / `PATH_EMERGENCY_NOW`
+- `DEFERRED_PENDING_DATA`
+
+### Run cardio tests
+
+```bash
+pytest -q tests/cardio_v1 tests/test_api_cardio_endpoint.py
+```

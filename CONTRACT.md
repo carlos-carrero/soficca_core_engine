@@ -38,3 +38,20 @@ The canonical JSON Schema is:
 ```
 
 The engine is designed so adapters (forms, EHR, chat, etc.) can produce `state` in a reproducible way.
+
+## Cardio triage contract (v1 demo)
+
+Cardio demo implementation is isolated under:
+- `src/cardio_triage_v1/`
+
+API adapter endpoints:
+- `POST /v1/cardio/report`
+- `GET /v1/cardio/contract`
+
+Cardio output remains deterministic, auditable, and versioned with:
+- explicit `decision` typing (`NEEDS_MORE_INFO`, `URGENT_ESCALATION`, `ROUTINE_REVIEW`, `DEFERRED_PENDING_DATA`, emergency override)
+- explicit `safety` override metadata
+- explicit `trace` metadata including triggered rules, preliminary/final route, and conflicts
+
+Canonical demo fixtures:
+- `examples/cardio_v1_scenarios.json`
