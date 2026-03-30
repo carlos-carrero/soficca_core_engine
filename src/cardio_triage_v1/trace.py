@@ -14,6 +14,7 @@ class TraceBuilder:
     policy_triggered: List[str] = field(default_factory=list)
     evidence: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     uncertainty_notes: List[str] = field(default_factory=list)
+    missing_fields: List[str] = field(default_factory=list)
 
     def add_rule_evaluated(self, rule_id: str) -> None:
         if rule_id not in self.rules_evaluated:
@@ -52,6 +53,9 @@ class TraceBuilder:
     def note_uncertainty(self, msg: str) -> None:
         self.uncertainty_notes.append(msg)
 
+    def set_missing_fields(self, fields: List[str]) -> None:
+        self.missing_fields = list(fields)
+
     def build(self) -> Dict[str, Any]:
         return {
             "policy_trace": {
@@ -62,4 +66,5 @@ class TraceBuilder:
             "rules_triggered": self.rules_triggered,
             "evidence": self.evidence,
             "uncertainty_notes": self.uncertainty_notes,
+            "missing_fields": self.missing_fields,
         }

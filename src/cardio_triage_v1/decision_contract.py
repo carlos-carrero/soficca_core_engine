@@ -40,6 +40,7 @@ def build_base_report() -> Dict[str, Any]:
             "reasons": [],
             "recommendations": [],
             "required_fields": [],
+            "missing_fields": [],
             "decision_id": "UNDECIDED",
         },
         "safety": {
@@ -58,6 +59,7 @@ def build_base_report() -> Dict[str, Any]:
             "rules_triggered": [],
             "evidence": {},
             "uncertainty_notes": ["Scaffold only: clinical logic not implemented."],
+            "missing_fields": [],
         },
     }
 
@@ -89,7 +91,7 @@ def validate_report(report: Dict[str, Any]) -> List[str]:
     if path is not None and path not in ALL_PATH_IDS:
         problems.append("decision.path invalid")
 
-    for key in ("flags", "reasons", "recommendations", "required_fields"):
+    for key in ("flags", "reasons", "recommendations", "required_fields", "missing_fields"):
         if not isinstance(decision.get(key), list):
             problems.append(f"decision.{key} must be list")
 
@@ -123,6 +125,12 @@ def validate_report(report: Dict[str, Any]) -> List[str]:
         problems.append("trace.evidence must be object")
     if not isinstance(trace.get("uncertainty_notes"), list):
         problems.append("trace.uncertainty_notes must be list")
+    if not isinstance(trace.get("missing_fields"), list):
+        problems.append("trace.missing_fields must be list")
+
+    if isinstance(decision.get("missing_fields"), list) and isinstance(trace.get("missing_fields"), list):
+        if decision.get("missing_fields") != trace.get("missing_fields"):
+            problems.append("decision.missing_fields and trace.missing_fields must match")
 
     if safety.get("status") == "TRIGGERED":
         if decision.get("status") != "ESCALATED":

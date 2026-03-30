@@ -25,6 +25,7 @@ def test_stable_decision_safety_trace_sections() -> None:
         "reasons",
         "recommendations",
         "required_fields",
+        "missing_fields",
         "decision_id",
     }
     assert set(report["safety"].keys()) == {
