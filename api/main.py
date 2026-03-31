@@ -17,6 +17,7 @@ from typing import Any, Dict, List
 from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict, Field
 
+from cardio_triage_v1.validation import evaluate_readiness as evaluate_cardio_report
 from soficca_core.engine import evaluate as evaluate_decision
 
 
@@ -125,6 +126,22 @@ DECISION_REPORT_V0_3_SCHEMA: Dict[str, Any] = {
     },
 }
 
+CARDIO_REPORT_V1_SCHEMA: Dict[str, Any] = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://soficca.ai/schemas/cardio_triage_report_v1.json",
+    "title": "Soficca Cardio Triage Report v1",
+    "type": "object",
+    "required": ["ok", "errors", "versions", "decision", "safety", "trace"],
+    "properties": {
+        "ok": {"type": "boolean"},
+        "errors": {"type": "array", "items": {"type": "object"}},
+        "versions": {"type": "object"},
+        "decision": {"type": "object"},
+        "safety": {"type": "object"},
+        "trace": {"type": "object"},
+    },
+}
+
 
 # -----------------------------
 # API Models
@@ -178,6 +195,40 @@ class BatchEvaluateRequest(BaseModel):
 class BatchEvaluateResponse(BaseModel):
     results: List[Dict[str, Any]]
 
+class CardioReportRequest(BaseModel):
+    """
+    Cardio triage demo input.
+    - strict structured state + optional context
+    - deterministic report output
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "state": {
+                        "age": 60,
+                        "chest_pain_present": True,
+                        "pain_duration_minutes": 15,
+                        "pain_character": "pressure",
+                        "pain_severity": "low",
+                        "pain_radiation": "none",
+                        "dyspnea": False,
+                        "syncope": False,
+                        "systolic_bp": 122,
+                        "heart_rate": 78,
+                        "known_cad": False,
+                        "current_meds_none": True,
+                    },
+                    "context": {"source": "USER"},
+                }
+            ]
+        }
+    )
+
+    state: Dict[str, Any] = Field(default_factory=dict)
+    context: Dict[str, Any] = Field(default_factory=dict)
+
 
 # -----------------------------
 # App
@@ -207,6 +258,10 @@ def contract() -> Dict[str, Any]:
     # Returns the canonical Decision Report schema (v0.3)
     return DECISION_REPORT_V0_3_SCHEMA
 
+@app.get("/v1/cardio/contract")
+def cardio_contract() -> Dict[str, Any]:
+    return CARDIO_REPORT_V1_SCHEMA
+
 
 @app.post("/v1/evaluate")
 def v1_evaluate(payload: EvaluateRequest) -> Dict[str, Any]:
@@ -231,6 +286,10 @@ def v1_evaluate_batch(payload: BatchEvaluateRequest) -> BatchEvaluateResponse:
         results.append(evaluate_decision({"state": item.state, "context": item.context}))
     return BatchEvaluateResponse(results=results)
 
+@app.post("/v1/cardio/report")
+def v1_cardio_report(payload: CardioReportRequest) -> Dict[str, Any]:
+    return evaluate_cardio_report({"state": payload.state, "context": payload.context})
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -238,4 +297,3 @@ if __name__ == "__main__":
     # Optional convenience entrypoint (PyCharm "Run api/main.py").
     # Your primary dev command remains: uvicorn api.main:app --reload
     uvicorn.run(app, host="127.0.0.1", port=8000)
-

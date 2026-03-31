@@ -1,0 +1,140 @@
+{
+  "scenarios": [
+    {
+      "id": "CARDIO_NEEDS_MORE_INFO",
+      "description": "Missing critical fields returns NEEDS_MORE_INFO.",
+      "input": {
+        "state": {
+          "age": 62,
+          "chest_pain_present": true,
+          "dyspnea": false,
+          "syncope": false,
+          "systolic_bp": 124,
+          "heart_rate": 80,
+          "current_meds_none": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision_status": "NEEDS_MORE_INFO"
+      }
+    },
+    {
+      "id": "CARDIO_ROUTINE_REVIEW",
+      "description": "Stable complete case routes to routine review.",
+      "input": {
+        "state": {
+          "age": 60,
+          "chest_pain_present": true,
+          "pain_duration_minutes": 15,
+          "pain_character": "pressure",
+          "pain_severity": "low",
+          "pain_radiation": "none",
+          "dyspnea": false,
+          "syncope": false,
+          "systolic_bp": 122,
+          "heart_rate": 78,
+          "known_cad": false,
+          "current_meds_none": true,
+          "exertional_chest_pain": false,
+          "diaphoresis": false,
+          "cv_risk_factors_count": 1
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision_type": "ROUTINE_REVIEW",
+        "path": "PATH_ROUTINE"
+      }
+    },
+    {
+      "id": "CARDIO_URGENT_ESCALATION",
+      "description": "Exertional pain with jaw radiation routes to urgent escalation.",
+      "input": {
+        "state": {
+          "age": 63,
+          "chest_pain_present": true,
+          "pain_duration_minutes": 20,
+          "pain_character": "pressure",
+          "pain_severity": "moderate",
+          "pain_radiation": "jaw",
+          "dyspnea": false,
+          "syncope": false,
+          "systolic_bp": 126,
+          "heart_rate": 88,
+          "known_cad": false,
+          "current_meds_none": true,
+          "exertional_chest_pain": true,
+          "diaphoresis": false,
+          "cv_risk_factors_count": 1
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision_type": "URGENT_ESCALATION",
+        "path": "PATH_URGENT_SAME_DAY"
+      }
+    },
+    {
+      "id": "CARDIO_EMERGENCY_ROUTE",
+      "description": "Hard red-flag emergency routes to emergency now.",
+      "input": {
+        "state": {
+          "age": 64,
+          "chest_pain_present": true,
+          "pain_duration_minutes": 10,
+          "pain_character": "pressure",
+          "pain_severity": "high",
+          "pain_radiation": "left_arm",
+          "dyspnea": false,
+          "syncope": true,
+          "systolic_bp": 120,
+          "heart_rate": 96,
+          "known_cad": false,
+          "current_meds_none": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision_type": "EMERGENCY_OVERRIDE",
+        "path": "PATH_EMERGENCY_NOW"
+      }
+    },
+    {
+      "id": "CARDIO_DEFERRED_PENDING_DATA",
+      "description": "Contradictory structured inputs produce deferred pending data.",
+      "input": {
+        "state": {
+          "age": 59,
+          "chest_pain_present": false,
+          "pain_duration_minutes": 20,
+          "pain_character": "crushing",
+          "pain_severity": "high",
+          "pain_radiation": "jaw",
+          "dyspnea": false,
+          "syncope": false,
+          "systolic_bp": 122,
+          "heart_rate": 84,
+          "known_cad": false,
+          "current_meds_none": true,
+          "exertional_chest_pain": true
+        },
+        "context": {
+          "source": "USER"
+        }
+      },
+      "expected": {
+        "decision_type": "DEFERRED_PENDING_DATA",
+        "status": "CONFLICT"
+      }
+    }
+  ]
+}
