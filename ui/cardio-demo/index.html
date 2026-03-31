@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soficca Cardio Demo Console</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">SOFICCA · DEMO</p>
+        <h1>Cardio Decision Console</h1>
+      </div>
+      <div class="version-block">
+        <p>Mode: <strong>Decision-first</strong></p>
+        <p>Data source: <strong>API endpoint (Stage 2)</strong></p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel left-panel" aria-labelledby="case-input-title">
+        <div class="panel-header">
+          <h2 id="case-input-title">Case Input</h2>
+          <p>Structured scenario selection and editable payload.</p>
+        </div>
+
+        <label for="scenario" class="field-label">Scenario</label>
+        <select id="scenario" class="input-control"></select>
+        <div id="scenario-cards" class="scenario-cards" aria-label="Quick scenario selection"></div>
+
+        <label for="request-json" class="field-label">Request payload (preview)</label>
+        <textarea id="request-json" class="payload-box" spellcheck="false"></textarea>
+
+        <div class="actions-row">
+          <button id="run-btn" type="button" class="btn primary">Run Engine Evaluation</button>
+          <button id="reset-btn" type="button" class="btn">Reset</button>
+        </div>
+
+        <p id="status-note" class="note">Ready to submit structured JSON to <code>POST /v1/cardio/report</code>.</p>
+      </section>
+
+      <section class="panel right-panel" aria-labelledby="engine-results-title">
+        <div class="panel-header">
+          <h2 id="engine-results-title">Engine Results</h2>
+          <p>Governed clinical decision report visualization.</p>
+        </div>
+
+        <article id="decision-hero" class="decision-hero">
+          <p class="hero-label">Main Decision Outcome</p>
+          <p id="decision-summary" class="hero-value">Awaiting run…</p>
+          <p id="clinical-summary" class="hero-subtext">Run a case to see route and safety posture.</p>
+        </article>
+
+        <article id="safety-banner" class="safety-banner safety-clear">
+          <div>
+            <p class="hero-label">Safety Status</p>
+            <p id="safety" class="banner-value">—</p>
+          </div>
+          <ul id="safety-triggers" class="list-inline"><li>No triggers</li></ul>
+        </article>
+
+        <article class="route-card">
+          <h3>Route Progression</h3>
+          <div class="route-grid">
+            <div>
+              <p class="micro-label">Preliminary Route</p>
+              <p id="preliminary-route" class="value">—</p>
+            </div>
+            <div>
+              <p class="micro-label">Final Route</p>
+              <p id="recommended-route" class="value">—</p>
+            </div>
+          </div>
+        </article>
+
+        <div class="result-grid">
+          <article class="card">
+            <h3>Urgency Level</h3>
+            <p id="urgency-level" class="value">—</p>
+          </article>
+
+          <article class="card full-width">
+            <h3>Required Fields</h3>
+            <ul id="required-fields" class="list-block"><li>—</li></ul>
+          </article>
+
+          <article class="card full-width">
+            <h3>Required Actions</h3>
+            <ul id="required-actions" class="list-block"><li>—</li></ul>
+          </article>
+
+          <article class="card full-width trace-card">
+            <h3>Trace</h3>
+            <details open>
+              <summary>Operational trace (rules and policy)</summary>
+              <pre id="trace" class="trace-box">{}</pre>
+            </details>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Optional embed-time override:
+      // window.__SOFICCA_DEMO_CONFIG__ = { apiBaseUrl: "https://api.example.com" };
+    </script>
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>

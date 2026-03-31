@@ -12,9 +12,13 @@ This is a thin FastAPI adapter over the deterministic engine.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any, Dict, List
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from cardio_triage_v1.validation import evaluate_readiness as evaluate_cardio_report
@@ -234,6 +238,7 @@ class CardioReportRequest(BaseModel):
 # App
 # -----------------------------
 app = FastAPI(title="Soficca Core API (Decision-First)", version="0.3.0")
+app.mount("/demo/cardio", StaticFiles(directory="ui/cardio-demo", html=True), name="cardio-demo")
 
 
 @app.get("/")
@@ -253,6 +258,11 @@ def healthz() -> Dict[str, Any]:
     return {"ok": True, "service": "Soficca Core API", "mode": "decision_first"}
 
 
+@app.get("/demo")
+def demo_index() -> RedirectResponse:
+    return RedirectResponse(url="/demo/cardio")
+
+
 @app.get("/contract")
 def contract() -> Dict[str, Any]:
     # Returns the canonical Decision Report schema (v0.3)
@@ -261,6 +271,13 @@ def contract() -> Dict[str, Any]:
 @app.get("/v1/cardio/contract")
 def cardio_contract() -> Dict[str, Any]:
     return CARDIO_REPORT_V1_SCHEMA
+
+
+@app.get("/v1/cardio/manual-requests")
+def cardio_manual_requests() -> Dict[str, Any]:
+    payload_path = Path("examples/cardio_v1_manual_requests.json")
+    with payload_path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 @app.post("/v1/evaluate")
