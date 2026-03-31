@@ -64,7 +64,6 @@ def _risk_factor_count(state: Dict[str, Any]) -> Optional[int]:
 
 def normalize_for_readiness(state: Dict[str, Any]) -> Dict[str, Any]:
     """Deterministic extraction/coercion for readiness and routing checks."""
-    
     prior_mi = _coerce_bool(state.get("prior_mi"))
     known_cad = _coerce_bool(state.get("known_cad"))
 
