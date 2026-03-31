@@ -15,6 +15,8 @@ This folder contains a modular browser demo for the cardio endpoint.
   - HTTP client functions (`fetchManualRequests`, `postCardioReport`).
 - `js/dom.js`
   - DOM references + shared UI utilities (loading/status/list rendering).
+- `js/input_form.js`
+  - Structured clinical form <-> JSON payload synchronization.
 - `js/scenarios.js`
   - Scenario state and selector/card rendering.
 - `js/render.js`

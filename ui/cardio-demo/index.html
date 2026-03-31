@@ -3,20 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Soficca Cardio Demo Console</title>
+    <title>Soficca Cardiology Triage Console</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <header class="topbar">
       <div>
         <p class="eyebrow">SOFICCA · DEMO</p>
-        <h1>Cardio Decision Console</h1>
+        <h1>Soficca Cardiology Triage Console</h1>
       </div>
       <div class="version-block">
         <p>Mode: <strong>Decision-first</strong></p>
         <p>Data source: <strong>API endpoint (Stage 2)</strong></p>
       </div>
     </header>
+
+    <section class="meta-strip" aria-label="Audit metadata">
+      <span class="meta-pill">Engine <strong id="meta-engine">—</strong></span>
+      <span class="meta-pill">Ruleset <strong id="meta-ruleset">—</strong></span>
+      <span class="meta-pill">Safety Policy <strong id="meta-safety-policy">—</strong></span>
+      <span class="meta-pill">Contract <strong id="meta-contract">—</strong></span>
+    </section>
 
     <main class="layout">
       <section class="panel left-panel" aria-labelledby="case-input-title">
@@ -29,8 +36,81 @@
         <select id="scenario" class="input-control"></select>
         <div id="scenario-cards" class="scenario-cards" aria-label="Quick scenario selection"></div>
 
-        <label for="request-json" class="field-label">Request payload (preview)</label>
-        <textarea id="request-json" class="payload-box" spellcheck="false"></textarea>
+        <h3 class="subsection-title">Structured Clinical Input</h3>
+        <div class="form-sections">
+          <section class="form-section">
+            <h4>Presenting Complaint <span class="hint">(core)</span></h4>
+            <div class="form-grid">
+              <label>Age (years) <span class="req">Required</span><input id="f-age" type="number" min="18" max="120" /></label>
+              <label>Chest Pain Present <span class="req">Required</span>
+                <select id="f-chest-pain-present">
+                  <option value="">—</option><option value="true">Yes</option><option value="false">No</option>
+                </select>
+              </label>
+              <label>Pain Duration (min) <span class="req">Required</span><input id="f-pain-duration-minutes" type="number" min="0" max="600" /></label>
+              <label>Pain Character <span class="req">Required</span><input id="f-pain-character" type="text" placeholder="e.g. pressure / crushing" /></label>
+              <label>Pain Severity <span class="opt">Optional</span>
+                <select id="f-pain-severity">
+                  <option value="">—</option><option value="low">Low</option><option value="moderate">Moderate</option><option value="high">High</option>
+                </select>
+              </label>
+              <label>Pain Radiation <span class="opt">Optional</span><input id="f-pain-radiation" type="text" placeholder="none / jaw / left_arm" /></label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h4>Associated Symptoms <span class="hint">(clinical context)</span></h4>
+            <div class="form-grid">
+              <label>Dyspnea <span class="req">Required</span>
+                <select id="f-dyspnea"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+              <label>Syncope <span class="req">Required</span>
+                <select id="f-syncope"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+              <label>Exertional Chest Pain <span class="opt">Optional</span>
+                <select id="f-exertional-chest-pain"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+              <label>Diaphoresis <span class="opt">Optional</span>
+                <select id="f-diaphoresis"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h4>Vitals <span class="hint">(core)</span></h4>
+            <div class="form-grid">
+              <label>Systolic BP (mmHg) <span class="req">Required</span><input id="f-systolic-bp" type="number" min="50" max="260" /></label>
+              <label>Heart Rate (bpm) <span class="req">Required</span><input id="f-heart-rate" type="number" min="20" max="240" /></label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h4>Cardiovascular History</h4>
+            <div class="form-grid">
+              <label>Known CAD <span class="req">Required</span>
+                <select id="f-known-cad"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+              <label>CV Risk Factors Count <span class="opt">Optional</span><input id="f-cv-risk-factors-count" type="number" min="0" max="20" /></label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h4>Medications & Context</h4>
+            <div class="form-grid">
+              <label>No Current Cardio Meds <span class="req">Required</span>
+                <select id="f-current-meds-none"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+              <label>Context Source <span class="opt">Optional</span><input id="f-context-source" type="text" placeholder="USER" /></label>
+            </div>
+          </section>
+        </div>
+
+        <details class="payload-details">
+          <summary>Technical payload preview (JSON)</summary>
+          <label for="request-json" class="field-label">Request payload (secondary view)</label>
+          <textarea id="request-json" class="payload-box" spellcheck="false"></textarea>
+          <button id="apply-json-btn" type="button" class="btn subtle">Apply JSON to Structured Fields</button>
+        </details>
 
         <div class="actions-row">
           <button id="run-btn" type="button" class="btn primary">Run Engine Evaluation</button>
@@ -47,28 +127,30 @@
         </div>
 
         <article id="decision-hero" class="decision-hero">
-          <p class="hero-label">Main Decision Outcome</p>
-          <p id="decision-summary" class="hero-value">Awaiting run…</p>
-          <p id="clinical-summary" class="hero-subtext">Run a case to see route and safety posture.</p>
+          <p class="hero-label">Clinical Routing Decision</p>
+          <p id="decision-headline" class="hero-value">Awaiting evaluation</p>
+          <p id="decision-supporting" class="hero-subtext">Run a case to view the clinical routing recommendation.</p>
+          <p id="decision-tech" class="tech-line">Technical status: —</p>
         </article>
 
         <article id="safety-banner" class="safety-banner safety-clear">
           <div>
             <p class="hero-label">Safety Status</p>
-            <p id="safety" class="banner-value">—</p>
+            <p id="safety-message" class="banner-value">No active safety override</p>
+            <p id="safety-tech" class="tech-line">Technical safety: —</p>
           </div>
-          <ul id="safety-triggers" class="list-inline"><li>No triggers</li></ul>
+          <ul id="safety-triggers" class="list-inline"><li>No emergency red flags detected</li></ul>
         </article>
 
         <article class="route-card">
-          <h3>Route Progression</h3>
+          <h3>Recommended Next Step</h3>
           <div class="route-grid">
             <div>
-              <p class="micro-label">Preliminary Route</p>
+              <p class="micro-label">Initial route assessment</p>
               <p id="preliminary-route" class="value">—</p>
             </div>
             <div>
-              <p class="micro-label">Final Route</p>
+              <p class="micro-label">Final route recommendation</p>
               <p id="recommended-route" class="value">—</p>
             </div>
           </div>
@@ -76,24 +158,34 @@
 
         <div class="result-grid">
           <article class="card">
-            <h3>Urgency Level</h3>
-            <p id="urgency-level" class="value">—</p>
+            <h3>Urgency</h3>
+            <p><span id="urgency-level" class="chip">—</span></p>
           </article>
 
           <article class="card full-width">
-            <h3>Required Fields</h3>
+            <h3>Missing Information</h3>
             <ul id="required-fields" class="list-block"><li>—</li></ul>
           </article>
 
           <article class="card full-width">
-            <h3>Required Actions</h3>
+            <h3>Next Actions</h3>
             <ul id="required-actions" class="list-block"><li>—</li></ul>
           </article>
 
           <article class="card full-width trace-card">
-            <h3>Trace</h3>
+            <h3>Decision Trace</h3>
+            <div class="trace-actions">
+              <button id="copy-trace-btn" type="button" class="btn subtle">Copy Trace JSON</button>
+            </div>
+            <div class="trace-highlights">
+              <div><p class="micro-label">Activated rules</p><p id="trace-activated-rules" class="value">—</p></div>
+              <div><p class="micro-label">Preliminary route</p><p id="trace-preliminary-route" class="value">—</p></div>
+              <div><p class="micro-label">Final route</p><p id="trace-final-route" class="value">—</p></div>
+              <div><p class="micro-label">Override reason</p><p id="trace-override-reason" class="value">—</p></div>
+              <div class="full-width"><p class="micro-label">Conflicts detected</p><p id="trace-conflicts" class="value">None</p></div>
+            </div>
             <details open>
-              <summary>Operational trace (rules and policy)</summary>
+              <summary>Full operational trace (rules, policy, and evidence)</summary>
               <pre id="trace" class="trace-box">{}</pre>
             </details>
           </article>

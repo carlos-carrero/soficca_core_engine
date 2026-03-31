@@ -1,7 +1,8 @@
 import { fetchManualRequests, postCardioReport } from './api.js';
 import { setLoadingState, setStatus, ui } from './dom.js';
+import { applyPayloadToForm, bindFormSync, tryApplyPreviewJsonToForm, writePayloadPreviewFromForm } from './input_form.js';
 import { renderReport, resetReportView } from './render.js';
-import { getScenarios, renderScenarioControls, selectScenario, setScenarios } from './scenarios.js';
+import { getScenarios, renderScenarioControls, selectScenario, setScenarioSelectionHandler, setScenarios } from './scenarios.js';
 
 async function loadScenarios() {
   setStatus('Loading scenarios from /v1/cardio/manual-requests ...');
@@ -47,7 +48,29 @@ ui.scenarioSelect.addEventListener('change', () => {
   selectScenario(ui.scenarioSelect.value);
 });
 
+setScenarioSelectionHandler((scenario) => {
+  applyPayloadToForm(scenario.request);
+});
+
 ui.runBtn.addEventListener('click', runEvaluation);
+
+ui.copyTraceBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(ui.trace.textContent || '{}');
+    setStatus('Trace JSON copied to clipboard.');
+  } catch (err) {
+    setStatus('Unable to copy trace JSON in this browser context.', true);
+  }
+});
+
+ui.applyJsonBtn.addEventListener('click', () => {
+  try {
+    tryApplyPreviewJsonToForm();
+    setStatus('JSON applied to structured fields.');
+  } catch (err) {
+    setStatus(`Unable to apply JSON: ${err.message}`, true);
+  }
+});
 
 ui.resetBtn.addEventListener('click', () => {
   const first = getScenarios()[0];
@@ -57,6 +80,8 @@ ui.resetBtn.addEventListener('click', () => {
     ui.requestJson.value = '{}';
   }
   resetReportView();
+  writePayloadPreviewFromForm();
 });
 
+bindFormSync();
 loadScenarios();

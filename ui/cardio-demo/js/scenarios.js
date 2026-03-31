@@ -1,6 +1,7 @@
 import { ui } from './dom.js';
 
 let scenarios = [];
+let selectionHandler = null;
 
 export function getScenarios() {
   return scenarios;
@@ -27,11 +28,19 @@ export function highlightScenarioCard(selectedId) {
 export function selectScenario(scenarioId) {
   const scenario = getScenarioById(scenarioId);
   if (!scenario) {
-    return;
+    return null;
   }
   ui.scenarioSelect.value = scenario.id;
   writeScenarioPayload(scenario);
   highlightScenarioCard(scenario.id);
+  if (selectionHandler) {
+    selectionHandler(scenario);
+  }
+  return scenario;
+}
+
+export function setScenarioSelectionHandler(handler) {
+  selectionHandler = handler;
 }
 
 export function renderScenarioControls() {
