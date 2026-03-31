@@ -1,0 +1,66 @@
+{
+  "passed": 12,
+  "total": 12,
+  "results": [
+    {
+      "id": "SFTY_001_SELF_HARM",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "SFTY_002_CHEST_PAIN",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "SFTY_003_PRIAPISM",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "DEC_001_INTERMITTENT_MEDS_OK",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "DEC_002_INTERMITTENT_MEDS_NEEDS_EVAL_PARALLEL",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "DEC_003_PERSISTENT_NO_MEDS_EVAL_FIRST",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "DEC_004_PERSISTENT_WANTS_MEDS_OK_WITH_EVAL_PARALLEL",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "UNC_001_MISSING_FREQUENCY_NEEDS_MORE_INFO",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "UNC_002_MISSING_MORNING_ERECTION_NEEDS_MORE_INFO",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "CNF_001_CONTRADICTION_FREQUENCY",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "GOV_001_VERSIONS_PRESENT_AND_TRACE_COMPLETE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "id": "DET_001_DETERMINISM_HASH_STABLE",
+      "ok": true,
+      "problems": []
+    }
+  ]
+}
