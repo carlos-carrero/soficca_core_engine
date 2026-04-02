@@ -76,7 +76,7 @@ export function renderReport(report) {
   ui.traceFinalRoute.textContent = trace.final_route || '—';
   ui.traceOverrideReason.textContent = trace.override_reason || 'None';
   const conflicts = trace.conflicts_detected || [];
-  ui.traceConflicts.textContent = conflicts.length ? conflicts.join(', ') : 'None';
+  renderList(ui.traceConflicts, conflicts, 'None');
 
   ui.trace.textContent = JSON.stringify(trace, null, 2);
 }
@@ -106,6 +106,6 @@ export function resetReportView() {
   ui.tracePreliminaryRoute.textContent = '—';
   ui.traceFinalRoute.textContent = '—';
   ui.traceOverrideReason.textContent = '—';
-  ui.traceConflicts.textContent = 'None';
+  renderList(ui.traceConflicts, [], 'None');
   ui.trace.textContent = '{}';
 }

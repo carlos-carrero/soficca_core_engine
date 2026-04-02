@@ -87,6 +87,9 @@
           <section class="form-section">
             <h4>Cardiovascular History</h4>
             <div class="form-grid">
+              <label>Prior MI <span class="opt">Optional</span>
+                <select id="f-prior-mi"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
               <label>Known CAD <span class="req">Required</span>
                 <select id="f-known-cad"><option value="">—</option><option value="true">Yes</option><option value="false">No</option></select>
               </label>
@@ -182,7 +185,10 @@
               <div><p class="micro-label">Preliminary route</p><p id="trace-preliminary-route" class="value">—</p></div>
               <div><p class="micro-label">Final route</p><p id="trace-final-route" class="value">—</p></div>
               <div><p class="micro-label">Override reason</p><p id="trace-override-reason" class="value">—</p></div>
-              <div class="full-width"><p class="micro-label">Conflicts detected</p><p id="trace-conflicts" class="value">None</p></div>
+              <div class="full-width">
+                <p class="micro-label">Conflicts detected</p>
+                <ul id="trace-conflicts" class="conflict-list"><li>None</li></ul>
+              </div>
             </div>
             <details open>
               <summary>Full operational trace (rules, policy, and evidence)</summary>

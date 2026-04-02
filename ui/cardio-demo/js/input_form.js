@@ -5,6 +5,7 @@ const BOOLEAN_FIELDS = new Set([
   'chest_pain_present',
   'dyspnea',
   'syncope',
+  'prior_mi',
   'known_cad',
   'current_meds_none',
   'exertional_chest_pain',

@@ -40,6 +40,7 @@ export const ui = {
     syncope: document.getElementById('f-syncope'),
     systolic_bp: document.getElementById('f-systolic-bp'),
     heart_rate: document.getElementById('f-heart-rate'),
+    prior_mi: document.getElementById('f-prior-mi'),
     known_cad: document.getElementById('f-known-cad'),
     current_meds_none: document.getElementById('f-current-meds-none'),
     exertional_chest_pain: document.getElementById('f-exertional-chest-pain'),
