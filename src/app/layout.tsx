@@ -1,26 +1,20 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
+
 import './globals.css';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-});
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
 
 export const metadata: Metadata = {
-  title: 'Soficca Cardio Demo v0',
-  description: 'Premium deterministic cardio triage demo frontend (mock mode).',
+  title: 'Soficca Clinical Decision Layer',
+  description: 'Cardiology triage demo powered by deterministic routing, safety policy, and audit trace',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${spaceGrotesk.variable}`}>{children}</body>
+      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>{children}</body>
     </html>
   );
 }
