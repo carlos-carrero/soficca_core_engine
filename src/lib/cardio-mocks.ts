@@ -1,4 +1,4 @@
-import type { CardioScenario } from '@/lib/cardio-types';
+import type { CardioReport, CardioScenario, CardioScenarioId } from '@/lib/cardio-types';
 
 const baseVersions = {
   engine: '1.0.0-cardio-demo',
@@ -26,6 +26,18 @@ export const cardioScenarios: CardioScenario[] = [
   {
     id: 'NEEDS_MORE_INFO',
     label: 'Needs More Info',
+    request: {
+      state: {
+        age: 62,
+        chest_pain_present: true,
+        dyspnea: false,
+        syncope: false,
+        systolic_bp: 124,
+        heart_rate: 80,
+        current_meds_none: true,
+      },
+      context: { source: 'USER' },
+    },
     report: {
       ok: true,
       errors: [],
@@ -61,10 +73,7 @@ export const cardioScenarios: CardioScenario[] = [
         rules_evaluated: rulesEvaluated,
         rules_triggered: [],
         activated_rules: [],
-        evidence: {
-          chest_pain_present: { value: true },
-          syncope: { value: false },
-        },
+        evidence: { chest_pain_present: { value: true }, syncope: { value: false } },
         uncertainty_notes: ['Critical cardio fields missing; triage logic not executed.'],
         missing_fields: ['pain_duration_minutes', 'pain_character', 'pain_radiation', 'prior_mi_or_known_cad'],
         conflicts_detected: [],
@@ -77,6 +86,26 @@ export const cardioScenarios: CardioScenario[] = [
   {
     id: 'ROUTINE_REVIEW',
     label: 'Routine Review',
+    request: {
+      state: {
+        age: 60,
+        chest_pain_present: true,
+        pain_duration_minutes: 15,
+        pain_character: 'pressure',
+        pain_severity: 'low',
+        pain_radiation: 'none',
+        dyspnea: false,
+        syncope: false,
+        systolic_bp: 122,
+        heart_rate: 78,
+        known_cad: false,
+        current_meds_none: true,
+        exertional_chest_pain: false,
+        diaphoresis: false,
+        cv_risk_factors_count: 1,
+      },
+      context: { source: 'USER' },
+    },
     report: {
       ok: true,
       errors: [],
@@ -112,10 +141,7 @@ export const cardioScenarios: CardioScenario[] = [
         rules_evaluated: rulesEvaluated,
         rules_triggered: ['RULE_ROUTINE_STABLE_COMPLETE_V1'],
         activated_rules: ['RULE_ROUTINE_STABLE_COMPLETE_V1'],
-        evidence: {
-          pain_character: { value: 'pressure' },
-          pain_radiation: { value: 'none' },
-        },
+        evidence: { pain_character: { value: 'pressure' }, pain_radiation: { value: 'none' } },
         uncertainty_notes: [],
         missing_fields: [],
         conflicts_detected: [],
@@ -128,6 +154,26 @@ export const cardioScenarios: CardioScenario[] = [
   {
     id: 'URGENT_ESCALATION',
     label: 'Urgent Escalation',
+    request: {
+      state: {
+        age: 63,
+        chest_pain_present: true,
+        pain_duration_minutes: 20,
+        pain_character: 'pressure',
+        pain_severity: 'moderate',
+        pain_radiation: 'jaw',
+        dyspnea: false,
+        syncope: false,
+        systolic_bp: 126,
+        heart_rate: 88,
+        known_cad: false,
+        current_meds_none: true,
+        exertional_chest_pain: true,
+        diaphoresis: false,
+        cv_risk_factors_count: 1,
+      },
+      context: { source: 'USER' },
+    },
     report: {
       ok: true,
       errors: [],
@@ -163,10 +209,7 @@ export const cardioScenarios: CardioScenario[] = [
         rules_evaluated: rulesEvaluated,
         rules_triggered: ['RULE_URGENT_EXERTIONAL_RADIATION_V1'],
         activated_rules: ['RULE_URGENT_EXERTIONAL_RADIATION_V1'],
-        evidence: {
-          exertional_chest_pain: { value: true },
-          pain_radiation: { value: 'jaw' },
-        },
+        evidence: { exertional_chest_pain: { value: true }, pain_radiation: { value: 'jaw' } },
         uncertainty_notes: [],
         missing_fields: [],
         conflicts_detected: [],
@@ -179,6 +222,23 @@ export const cardioScenarios: CardioScenario[] = [
   {
     id: 'EMERGENCY_ROUTE',
     label: 'Emergency Route',
+    request: {
+      state: {
+        age: 64,
+        chest_pain_present: true,
+        pain_duration_minutes: 10,
+        pain_character: 'pressure',
+        pain_severity: 'high',
+        pain_radiation: 'left_arm',
+        dyspnea: false,
+        syncope: true,
+        systolic_bp: 120,
+        heart_rate: 96,
+        known_cad: false,
+        current_meds_none: true,
+      },
+      context: { source: 'USER' },
+    },
     report: {
       ok: true,
       errors: [],
@@ -214,10 +274,7 @@ export const cardioScenarios: CardioScenario[] = [
         rules_evaluated: rulesEvaluated,
         rules_triggered: ['RULE_ROUTINE_STABLE_COMPLETE_V1'],
         activated_rules: ['RULE_ROUTINE_STABLE_COMPLETE_V1', 'POLICY_SYNCOPAL_CHEST_PAIN_V1'],
-        evidence: {
-          syncope: { value: true },
-          chest_pain_present: { value: true },
-        },
+        evidence: { syncope: { value: true }, chest_pain_present: { value: true } },
         uncertainty_notes: [],
         missing_fields: [],
         conflicts_detected: [],
@@ -230,6 +287,24 @@ export const cardioScenarios: CardioScenario[] = [
   {
     id: 'DEFERRED_PENDING_DATA',
     label: 'Deferred Pending Data',
+    request: {
+      state: {
+        age: 59,
+        chest_pain_present: false,
+        pain_duration_minutes: 20,
+        pain_character: 'crushing',
+        pain_severity: 'high',
+        pain_radiation: 'jaw',
+        dyspnea: false,
+        syncope: false,
+        systolic_bp: 122,
+        heart_rate: 84,
+        known_cad: false,
+        current_meds_none: true,
+        exertional_chest_pain: true,
+      },
+      context: { source: 'USER' },
+    },
     report: {
       ok: true,
       errors: [],
@@ -268,10 +343,7 @@ export const cardioScenarios: CardioScenario[] = [
         rules_evaluated: rulesEvaluated,
         rules_triggered: ['RULE_ROUTINE_STABLE_COMPLETE_V1'],
         activated_rules: ['RULE_ROUTINE_STABLE_COMPLETE_V1'],
-        evidence: {
-          chest_pain_present: { value: false },
-          pain_character: { value: 'crushing' },
-        },
+        evidence: { chest_pain_present: { value: false }, pain_character: { value: 'crushing' } },
         uncertainty_notes: ['Conflicting structured inputs detected.'],
         missing_fields: [],
         conflicts_detected: [
@@ -287,3 +359,12 @@ export const cardioScenarios: CardioScenario[] = [
     },
   },
 ];
+
+export function getScenarioById(id: CardioScenarioId): CardioScenario {
+  return cardioScenarios.find((scenario) => scenario.id === id) ?? cardioScenarios[0];
+}
+
+export function getFallbackReport(id?: CardioScenarioId): CardioReport {
+  if (!id) return cardioScenarios[0].report;
+  return getScenarioById(id).report;
+}

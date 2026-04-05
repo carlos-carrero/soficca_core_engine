@@ -56,6 +56,13 @@ export type CardioReport = {
   trace: CardioTrace;
 };
 
+export type CardioPayload = {
+  state: Record<string, unknown>;
+  context: {
+    source: string;
+  };
+};
+
 export type CardioScenarioId =
   | 'NEEDS_MORE_INFO'
   | 'ROUTINE_REVIEW'
@@ -66,5 +73,6 @@ export type CardioScenarioId =
 export type CardioScenario = {
   id: CardioScenarioId;
   label: string;
+  request: CardioPayload;
   report: CardioReport;
 };
