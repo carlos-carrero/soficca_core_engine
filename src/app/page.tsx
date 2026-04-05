@@ -2,36 +2,41 @@
 
 import { useMemo, useState } from 'react';
 
-import { CaseIntakePanel } from '@/components/cardio/case-intake-panel';
-import { CaseSummary } from '@/components/cardio/case-summary';
-import { DecisionCard } from '@/components/cardio/decision-card';
-import { CardioHeader } from '@/components/cardio/header';
-import { NextStepsCard } from '@/components/cardio/next-steps-card';
-import { SafetyCard } from '@/components/cardio/safety-card';
-import { TraceCard } from '@/components/cardio/trace-card';
+import { CaseInput } from '@/components/soficca/case-input';
+import { EngineResults } from '@/components/soficca/engine-results';
+import { Header } from '@/components/soficca/header';
+import { getDefaultScenario, mapReportToEngineViewModel } from '@/lib/cardio-ui-adapter';
 import { cardioScenarios, getScenarioById } from '@/lib/cardio-mocks';
-import type { CardioPayload, CardioReport, CardioScenarioId } from '@/lib/cardio-types';
+import type { CardioPayload, CardioScenarioId } from '@/lib/cardio-types';
 
 function formatPayload(payload: CardioPayload): string {
   return JSON.stringify(payload, null, 2);
 }
 
 export default function HomePage() {
-  const [scenarioId, setScenarioId] = useState<CardioScenarioId>('ROUTINE_REVIEW');
+  const defaultScenario = useMemo(() => getDefaultScenario(cardioScenarios), []);
+  const [scenarioId, setScenarioId] = useState<CardioScenarioId>(defaultScenario.id);
+  const [payloadJson, setPayloadJson] = useState<string>(formatPayload(defaultScenario.request));
   const [isRunning, setIsRunning] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('Ready in local+backend bridge mode.');
+  const [statusMessage, setStatusMessage] = useState(
+    'Ready in backend bridge mode. Select a scenario to preload payload, then run evaluation.'
+  );
+  const [lastEvaluated, setLastEvaluated] = useState<ReturnType<typeof mapReportToEngineViewModel> | null>(null);
 
   const scenario = useMemo(() => getScenarioById(scenarioId), [scenarioId]);
-
-  const [payloadJson, setPayloadJson] = useState<string>(formatPayload(scenario.request));
-  const [report, setReport] = useState<CardioReport>(scenario.report);
 
   function onChangeScenario(id: CardioScenarioId) {
     const nextScenario = getScenarioById(id);
     setScenarioId(id);
     setPayloadJson(formatPayload(nextScenario.request));
-    setReport(nextScenario.report);
-    setStatusMessage(`Loaded ${id}. Click Run Evaluation to execute against backend via /api/cardio/report.`);
+    setStatusMessage(`Loaded ${nextScenario.label}. Click Run Evaluation to execute against /api/cardio/report.`);
+  }
+
+  function onReset() {
+    const nextScenario = getDefaultScenario(cardioScenarios);
+    setScenarioId(nextScenario.id);
+    setPayloadJson(formatPayload(nextScenario.request));
+    setStatusMessage('Reset complete. Payload preloaded; click Run Evaluation to refresh right-side results.');
   }
 
   async function onRunEvaluation() {
@@ -47,53 +52,56 @@ export default function HomePage() {
     }
 
     setIsRunning(true);
+    const startedAt = Date.now();
     setStatusMessage('Submitting payload to /api/cardio/report ...');
 
     try {
       const response = await fetch('/api/cardio/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: parsedPayload, scenarioId }),
+        body: JSON.stringify({ payload: parsedPayload, scenarioId: scenario.id }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const nextReport = (await response.json()) as CardioReport;
-      setReport(nextReport);
-      setStatusMessage(`Evaluation complete. ok=${String(nextReport.ok)}.`);
+      const nextReport = await response.json();
+      const endedAt = Date.now();
+      setLastEvaluated(
+        mapReportToEngineViewModel(nextReport, parsedPayload, new Date(endedAt).toISOString(), endedAt - startedAt)
+      );
+      setStatusMessage('Evaluation complete. Right-side panel now reflects the latest evaluated report.');
     } catch (error) {
-      setStatusMessage(`Evaluation failed: ${(error as Error).message}`);
+      setStatusMessage(`Evaluation failed. Preserving last evaluated report. ${(error as Error).message}`);
     } finally {
       setIsRunning(false);
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-6 md:px-6 lg:px-8">
-      <CardioHeader />
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header />
 
-      <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <CaseIntakePanel
-          scenarios={cardioScenarios}
-          selectedId={scenarioId}
-          payloadJson={payloadJson}
-          statusMessage={statusMessage}
-          isRunning={isRunning}
-          onChangeScenario={onChangeScenario}
-          onPayloadChange={setPayloadJson}
-          onRunEvaluation={onRunEvaluation}
-        />
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col lg:flex-row">
+        <div className="w-full border-b border-border lg:w-[380px] lg:border-b-0 lg:border-r">
+          <CaseInput
+            scenarios={cardioScenarios}
+            selectedScenarioId={scenarioId}
+            payloadJson={payloadJson}
+            statusMessage={statusMessage}
+            onScenarioChange={onChangeScenario}
+            onPayloadChange={setPayloadJson}
+            onRunEvaluation={onRunEvaluation}
+            onReset={onReset}
+            isLoading={isRunning}
+          />
+        </div>
 
-        <section className="space-y-5">
-          <DecisionCard report={report} />
-          <CaseSummary report={report} scenarioId={scenarioId} />
-          <SafetyCard report={report} />
-          <NextStepsCard report={report} />
-          <TraceCard report={report} />
-        </section>
-      </div>
-    </main>
+        <div className="flex-1">
+          <EngineResults result={lastEvaluated} isLoading={isRunning} />
+        </div>
+      </main>
+    </div>
   );
 }
