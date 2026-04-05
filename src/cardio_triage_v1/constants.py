@@ -4,7 +4,6 @@ from __future__ import annotations
 ENGINE_VERSION = "1.0.0-cardio-demo"
 RULESET_VERSION = "1.0.0-cardio-demo"
 SAFETY_POLICY_VERSION = "1.0.0-cardio-demo"
-
 CONTRACT_VERSION = "cardio_triage_report_v1"
 
 # Decision statuses

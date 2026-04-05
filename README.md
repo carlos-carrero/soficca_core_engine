@@ -185,3 +185,12 @@ Scenarios include:
 ```bash
 pytest -q tests/cardio_v1 tests/test_api_cardio_endpoint.py
 ```
+
+### Cardio quick demo guide
+
+- **Endpoint:** `POST /v1/cardio/report`
+- **Run local API:** `uvicorn api.main:app --reload`
+- **Open Swagger docs:** `http://127.0.0.1:8000/docs`
+- **Scenario files:**
+  - Canonical: `examples/cardio_v1_scenarios.json`
+  - Manual demo requests: `examples/cardio_v1_manual_requests.json`
