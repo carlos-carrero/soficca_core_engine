@@ -1,19 +1,19 @@
 :root {
-  --bg: #0a0d12;
-  --bg-elevated: #0f141b;
-  --panel: #121922;
-  --ink: #f5f7fa;
-  --secondary: #b8c2cf;
+  --bg: #f4f7fb;
+  --bg-elevated: #eef4fb;
+  --panel: #ffffff;
+  --ink: #152033;
+  --secondary: #5f6f87;
   --muted: #7f8a99;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-subtle: rgba(255, 255, 255, 0.06);
-  --primary: #d6ff3f;
-  --primary-soft: rgba(214, 255, 63, 0.1);
-  --primary-border: rgba(214, 255, 63, 0.28);
-  --success: #7ee787;
-  --warning: #f2cc60;
-  --danger: #ff6b6b;
-  --info: #7cc7ff;
+  --line: #d7e0ec;
+  --line-subtle: #e6edf6;
+  --primary: #1f5ea8;
+  --primary-soft: #eaf2fd;
+  --primary-border: #d3dfed;
+  --success: #2e6f50;
+  --warning: #b2891c;
+  --danger: #b42626;
+  --info: #305b89;
 }
 
 * { box-sizing: border-box; }
@@ -29,32 +29,24 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.5rem 1.6rem 1.2rem;
-  border-bottom: 1px solid var(--line-subtle);
-  background: linear-gradient(180deg, #0f141b 0%, #0d1218 100%);
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(to right, #f9fbfe, #eef4fb);
 }
 
 .topbar h1 {
-  margin: 0.25rem 0 0;
-  font-size: 1.5rem;
-  font-weight: 800;
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
   letter-spacing: 0.01em;
-  color: var(--ink);
 }
 
 .eyebrow {
   margin: 0;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--primary);
+  color: #0d3a70;
   letter-spacing: 0.08em;
-}
-
-.brand-subtitle {
-  margin: 0.35rem 0 0;
-  color: var(--secondary);
-  font-size: 0.86rem;
-  font-weight: 500;
 }
 
 .version-block p {
@@ -80,25 +72,24 @@ body {
 
 .meta-pill {
   font-size: 0.75rem;
-  color: var(--secondary);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--line);
+  color: #45658c;
+  background: #eef4fb;
+  border: 1px solid #d6e1ef;
   border-radius: 999px;
   padding: 0.2rem 0.5rem;
 }
 
 .meta-pill strong {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--info);
+  color: #274f7f;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 1.15rem;
+  border-radius: 10px;
+  padding: 1rem;
   min-height: calc(100vh - 120px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
 .panel-header h2 {
@@ -124,12 +115,12 @@ body {
 .payload-box {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0.65rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.84rem;
   color: var(--ink);
-  background: #0f141b;
+  background: #fff;
 }
 
 .payload-box {
@@ -142,7 +133,7 @@ body {
   font-size: 0.82rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--secondary);
+  color: #0d3a70;
 }
 
 .form-sections {
@@ -151,10 +142,10 @@ body {
 }
 
 .form-section {
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border: 1px solid #dce5f1;
+  border-radius: 9px;
   padding: 0.6rem 0.65rem;
-  background: rgba(255, 255, 255, 0.015);
+  background: #fbfdff;
 }
 
 .form-section h4 {
@@ -162,7 +153,7 @@ body {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--ink);
+  color: #2b4f7a;
 }
 
 .hint {
@@ -191,18 +182,18 @@ body {
   letter-spacing: 0.02em;
 }
 
-.req { color: var(--info); }
+.req { color: #375f8d; }
 .opt { color: var(--muted); }
 
 .form-grid input,
 .form-grid select {
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 6px;
   padding: 0.45rem 0.5rem;
   font-size: 0.8rem;
   font-family: inherit;
   color: var(--ink);
-  background: #0e141c;
+  background: #fff;
 }
 
 .scenario-cards {
@@ -215,8 +206,8 @@ body {
 .scenario-card {
   text-align: left;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #111821;
+  border-radius: 8px;
+  background: #f8fbff;
   color: var(--ink);
   padding: 0.45rem 0.55rem;
   font-weight: 600;
@@ -225,8 +216,8 @@ body {
 }
 
 .scenario-card.active {
-  border-color: var(--primary-border);
-  background: var(--primary-soft);
+  border-color: var(--primary);
+  background: #eaf2fd;
 }
 
 .actions-row {
@@ -237,9 +228,9 @@ body {
 
 .btn {
   border: 1px solid var(--line);
-  background: #121922;
+  background: #fff;
   color: var(--ink);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0.55rem 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -247,9 +238,8 @@ body {
 
 .btn.primary {
   background: var(--primary);
-  border-color: var(--primary-border);
-  color: #111;
-  font-weight: 700;
+  border-color: var(--primary);
+  color: #fff;
 }
 
 .btn.subtle {
@@ -260,16 +250,16 @@ body {
 
 .payload-details {
   margin-top: 0.7rem;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid #dce5f1;
+  border-radius: 8px;
   padding: 0.55rem 0.65rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: #f7faff;
 }
 
 .payload-details summary {
   cursor: pointer;
   font-size: 0.82rem;
-  color: var(--secondary);
+  color: #385d89;
 }
 
 .btn:disabled {
@@ -292,27 +282,27 @@ body {
 
 .card {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.012);
+  background: #fbfdff;
 }
 
 .card h3 {
   margin: 0 0 0.45rem;
   font-size: 0.82rem;
-  color: var(--secondary);
+  color: #0d3a70;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
 .chip {
   display: inline-block;
-  border: 1px solid var(--line);
+  border: 1px solid #d3dfed;
   border-radius: 999px;
   padding: 0.18rem 0.52rem;
   font-size: 0.82rem;
-  background: rgba(124, 199, 255, 0.08);
-  color: var(--info);
+  background: #f3f8fe;
+  color: #305b89;
 }
 
 .full-width {
@@ -347,10 +337,10 @@ body {
 }
 
 .decision-hero {
-  border: 1px solid var(--primary-border);
-  border-radius: 18px;
+  border: 1px solid #cfdced;
+  border-radius: 10px;
   padding: 0.85rem 0.95rem;
-  background: linear-gradient(135deg, rgba(214, 255, 63, 0.06), rgba(255, 255, 255, 0.01));
+  background: linear-gradient(to bottom right, #f9fcff, #eef4fb);
 }
 
 .hero-label {
@@ -359,7 +349,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: #0d3a70;
 }
 
 .hero-value {
@@ -377,17 +367,17 @@ body {
 .tech-line {
   margin: 0.5rem 0 0;
   font-size: 0.75rem;
-  color: var(--muted);
+  color: #6d7f98;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .safety-banner {
   margin-top: 0.75rem;
-  border: 1px solid var(--line);
-  border-left: 6px solid var(--info);
-  border-radius: 16px;
+  border: 1px solid #d2dfef;
+  border-left: 6px solid #3b6aa0;
+  border-radius: 10px;
   padding: 0.72rem 0.9rem;
-  background: rgba(124, 199, 255, 0.06);
+  background: #f6faff;
   display: flex;
   justify-content: space-between;
   gap: 0.7rem;
@@ -395,14 +385,13 @@ body {
 }
 
 .safety-triggered {
-  border-color: rgba(255, 107, 107, 0.3);
-  border-left-color: var(--danger);
-  background: rgba(255, 107, 107, 0.08);
+  border-color: #efcccc;
+  border-left-color: #b42626;
+  background: #fff6f6;
 }
 
 .safety-clear {
-  border-left-color: var(--success);
-  background: rgba(126, 231, 135, 0.07);
+  border-left-color: #2e6f50;
 }
 
 .banner-value {
@@ -420,15 +409,15 @@ body {
 .route-card {
   margin-top: 0.75rem;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 0.72rem 0.85rem;
-  background: rgba(255, 255, 255, 0.012);
+  background: #ffffff;
 }
 
 .route-card h3 {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--secondary);
+  color: #0d3a70;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -451,7 +440,7 @@ body {
 .trace-card details summary {
   cursor: pointer;
   font-size: 0.84rem;
-  color: var(--secondary);
+  color: var(--muted);
   margin-bottom: 0.4rem;
 }
 
@@ -482,9 +471,9 @@ body {
 }
 
 .conflict-list li {
-  border: 1px solid rgba(242, 204, 96, 0.28);
-  background: rgba(242, 204, 96, 0.1);
-  color: var(--warning);
+  border: 1px solid #d6e2f0;
+  background: #f3f7fd;
+  color: #274f7f;
   border-radius: 999px;
   padding: 0.12rem 0.5rem;
   font-size: 0.75rem;
