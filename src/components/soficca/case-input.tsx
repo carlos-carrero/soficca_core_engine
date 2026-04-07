@@ -130,6 +130,11 @@ export function CaseInput({
 
         <IntakeSection label="Presenting Complaint">
           <div className="grid grid-cols-1 gap-2">
+            <NumberField
+              label="Age (years)"
+              value={asNumber(state.age)}
+              onChange={(value) => updateStateField('age', value)}
+            />
             <ToggleField
               label="Chest pain present"
               checked={Boolean(state.chest_pain_present)}
@@ -138,7 +143,7 @@ export function CaseInput({
             <TextField
               label="Pain character"
               value={asString(state.pain_character)}
-              onChange={(value) => updateStateField('pain_character', value || null)}
+              onChange={(value) => updateStateField('pain_character', value)}
             />
             <div className="grid grid-cols-2 gap-2">
               <NumberField
@@ -149,13 +154,13 @@ export function CaseInput({
               <TextField
                 label="Pain severity"
                 value={asString(state.pain_severity)}
-                onChange={(value) => updateStateField('pain_severity', value || null)}
+                onChange={(value) => updateStateField('pain_severity', value)}
               />
             </div>
             <TextField
               label="Pain radiation"
               value={asString(state.pain_radiation)}
-              onChange={(value) => updateStateField('pain_radiation', value || null)}
+              onChange={(value) => updateStateField('pain_radiation', value)}
             />
           </div>
         </IntakeSection>
@@ -193,11 +198,6 @@ export function CaseInput({
               label="Known CAD"
               checked={Boolean(state.known_cad)}
               onChange={(checked) => updateStateField('known_cad', checked)}
-            />
-            <ToggleField
-              label="Prior MI or known CAD"
-              checked={Boolean(state.prior_mi_or_known_cad)}
-              onChange={(checked) => updateStateField('prior_mi_or_known_cad', checked)}
             />
             <ToggleField
               label="Exertional chest pain"
