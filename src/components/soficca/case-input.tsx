@@ -79,23 +79,33 @@ export function CaseInput({
 
   function updateStateField(field: string, value: unknown) {
     if (!parsedPayload) return;
+    const newState = { ...parsedPayload.state };
+
+    if (value === '' || value === null) {
+      delete newState[field];
+    } else {
+      newState[field] = value;
+    }
+
     updatePayload({
       ...parsedPayload,
-      state: {
-        ...parsedPayload.state,
-        [field]: value,
-      },
+      state: newState,
     });
   }
 
   function updateContextField(field: string, value: string) {
     if (!parsedPayload) return;
+    const newContext = { ...parsedPayload.context };
+
+    if (value === '' || value === null) {
+      delete newContext[field];
+    } else {
+      newContext[field] = value;
+    }
+
     updatePayload({
       ...parsedPayload,
-      context: {
-        ...parsedPayload.context,
-        [field]: value,
-      },
+      context: newContext,
     });
   }
 
