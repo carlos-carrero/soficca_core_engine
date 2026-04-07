@@ -2,28 +2,26 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from pydantic import ValidationError
+
 from cardio_triage_v1.constants import (
     ALL_PATH_IDS,
     ALL_POLICY_RULE_IDS,
     ALL_RULE_IDS,
     CONTRACT_VERSION,
     DECISION_NEEDS_MORE_INFO,
-    DECISION_STATUSES,
     ENGINE_VERSION,
-    REPORT_TOP_LEVEL_KEYS,
     RULESET_VERSION,
-    SAFETY_ACTION_NONE,
-    SAFETY_ACTION_OVERRIDE_ESCALATE,
-    SAFETY_ACTIONS,
     SAFETY_CLEAR,
+    SAFETY_ACTION_NONE,
     SAFETY_POLICY_VERSION,
-    SAFETY_STATUSES,
 )
+from cardio_triage_v1.schema import CardioReport
 
 
 def build_base_report() -> Dict[str, Any]:
-    """Build a deterministic cardio v1 scaffold report."""
-    return {
+    """Build a deterministic cardio v1 scaffold report and validate it."""
+    report = {
         "ok": True,
         "errors": [],
         "versions": {
@@ -42,7 +40,7 @@ def build_base_report() -> Dict[str, Any]:
             "missing_fields": [],
             "decision_id": "UNDECIDED",
             "case_status": "PENDING_DATA",
-            "decision_type": "NEEDS_MORE_INFO",
+            "decision_type": DECISION_NEEDS_MORE_INFO,
             "recommended_route": None,
             "urgency_level": "UNKNOWN",
             "clinical_summary": "Insufficient data for safe triage.",
@@ -76,98 +74,40 @@ def build_base_report() -> Dict[str, Any]:
             "conflicts_detected": [],
         },
     }
+    return CardioReport.model_validate(report).model_dump(mode="python")
+
+
+def assert_valid_report(report: Dict[str, Any]) -> CardioReport:
+    """Validate and return a strongly typed cardio report model."""
+    return CardioReport.model_validate(report)
 
 
 def validate_report(report: Dict[str, Any]) -> List[str]:
     """Validate stable cardio v1 output shape and deterministic IDs."""
     problems: List[str] = []
-    if not isinstance(report, dict):
-        return ["report must be an object"]
 
-    for key in REPORT_TOP_LEVEL_KEYS:
-        if key not in report:
-            problems.append(f"missing field: {key}")
+    try:
+        model = CardioReport.model_validate(report)
+    except ValidationError as exc:
+        for err in exc.errors(include_url=False):
+            loc = ".".join(str(part) for part in err.get("loc", [])) or "$"
+            msg = err.get("msg", "validation error")
+            problems.append(f"{loc}: {msg}")
+        return problems
 
-    versions = report.get("versions") or {}
-    decision = report.get("decision") or {}
-    safety = report.get("safety") or {}
-    trace = report.get("trace") or {}
-    policy_trace = trace.get("policy_trace") or {}
+    if model.versions.contract != CONTRACT_VERSION:
+        problems.append("versions.contract must match canonical CONTRACT_VERSION")
 
-    for key in ("engine", "ruleset", "safety_policy", "contract"):
-        if not isinstance(versions.get(key), str) or not versions.get(key):
-            problems.append(f"versions.{key} must be non-empty string")
-
-    if decision.get("status") not in DECISION_STATUSES:
-        problems.append("decision.status invalid or missing")
-
-    path = decision.get("path")
-    if path is not None and path not in ALL_PATH_IDS:
+    if model.decision.path is not None and model.decision.path.value not in ALL_PATH_IDS:
         problems.append("decision.path invalid")
 
-    for key in ("flags", "reasons", "recommendations", "required_fields", "missing_fields", "required_actions"):
-        if not isinstance(decision.get(key), list):
-            problems.append(f"decision.{key} must be list")
-
-    for key in ("decision_id", "case_status", "decision_type", "urgency_level", "clinical_summary"):
-        if not isinstance(decision.get(key), str):
-            problems.append(f"decision.{key} must be string")
-
-    if decision.get("recommended_route") is not None and decision.get("recommended_route") not in ALL_PATH_IDS:
+    if model.decision.recommended_route is not None and model.decision.recommended_route.value not in ALL_PATH_IDS:
         problems.append("decision.recommended_route invalid")
 
-    if safety.get("status") not in SAFETY_STATUSES:
-        problems.append("safety.status invalid or missing")
-    if safety.get("action") not in SAFETY_ACTIONS:
-        problems.append("safety.action invalid or missing")
-    if not isinstance(safety.get("triggers"), list):
-        problems.append("safety.triggers must be list")
-    if not isinstance(safety.get("policy_version"), str):
-        problems.append("safety.policy_version must be string")
-    if not isinstance(safety.get("safety_id"), str):
-        problems.append("safety.safety_id must be string")
-    if not isinstance(safety.get("has_red_flags"), bool):
-        problems.append("safety.has_red_flags must be boolean")
-    if not isinstance(safety.get("override_applied"), bool):
-        problems.append("safety.override_applied must be boolean")
-    if not isinstance(safety.get("severity"), str):
-        problems.append("safety.severity must be string")
-    if not isinstance(safety.get("flags"), list):
-        problems.append("safety.flags must be list")
-
-    if not isinstance(policy_trace.get("evaluated"), list):
-        problems.append("trace.policy_trace.evaluated must be list")
-    if not isinstance(policy_trace.get("triggered"), list):
-        problems.append("trace.policy_trace.triggered must be list")
-    if not isinstance(trace.get("rules_evaluated"), list):
-        problems.append("trace.rules_evaluated must be list")
-    if not isinstance(trace.get("rules_triggered"), list):
-        problems.append("trace.rules_triggered must be list")
-    if not isinstance(trace.get("evidence"), dict):
-        problems.append("trace.evidence must be object")
-    if not isinstance(trace.get("uncertainty_notes"), list):
-        problems.append("trace.uncertainty_notes must be list")
-    if not isinstance(trace.get("missing_fields"), list):
-        problems.append("trace.missing_fields must be list")
-    if not isinstance(trace.get("activated_rules"), list):
-        problems.append("trace.activated_rules must be list")
-    if not isinstance(trace.get("conflicts_detected"), list):
-        problems.append("trace.conflicts_detected must be list")
-    if trace.get("preliminary_route") is not None and trace.get("preliminary_route") not in ALL_PATH_IDS:
+    if model.trace.preliminary_route is not None and model.trace.preliminary_route.value not in ALL_PATH_IDS:
         problems.append("trace.preliminary_route invalid")
-    if trace.get("final_route") is not None and trace.get("final_route") not in ALL_PATH_IDS:
+
+    if model.trace.final_route is not None and model.trace.final_route.value not in ALL_PATH_IDS:
         problems.append("trace.final_route invalid")
-    if trace.get("override_reason") is not None and not isinstance(trace.get("override_reason"), str):
-        problems.append("trace.override_reason must be string or null")
-
-    if isinstance(decision.get("missing_fields"), list) and isinstance(trace.get("missing_fields"), list):
-        if decision.get("missing_fields") != trace.get("missing_fields"):
-            problems.append("decision.missing_fields and trace.missing_fields must match")
-
-    if safety.get("status") == "TRIGGERED":
-        if decision.get("status") != "ESCALATED":
-            problems.append("If safety.TRIGGERED, decision.status must be ESCALATED")
-        if safety.get("action") != SAFETY_ACTION_OVERRIDE_ESCALATE:
-            problems.append("If safety.TRIGGERED, safety.action must be OVERRIDE_ESCALATE")
 
     return problems
