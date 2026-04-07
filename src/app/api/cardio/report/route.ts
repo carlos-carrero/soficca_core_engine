@@ -1,37 +1,35 @@
 import { NextResponse } from 'next/server';
 
-import { getFallbackReport } from '@/lib/cardio-mocks';
-import type { CardioPayload, CardioScenarioId } from '@/lib/cardio-types';
+import type { CardioPayload } from '@/lib/cardio-types';
 
 type RouteRequestBody = {
   payload?: CardioPayload;
-  scenarioId?: CardioScenarioId;
 };
 
 const BACKEND_URL = 'http://127.0.0.1:8000/v1/cardio/report';
 
-function extractPayload(body: unknown): { payload: CardioPayload | null; scenarioId?: CardioScenarioId } {
+function extractPayload(body: unknown): { payload: CardioPayload | null } {
   if (!body || typeof body !== 'object') {
     return { payload: null };
   }
 
   const typed = body as RouteRequestBody;
   if (!typed.payload || typeof typed.payload !== 'object') {
-    return { payload: null, scenarioId: typed.scenarioId };
+    return { payload: null };
   }
 
-  return { payload: typed.payload, scenarioId: typed.scenarioId };
+  return { payload: typed.payload };
 }
 
 export async function POST(req: Request) {
-  let parsed: { payload: CardioPayload | null; scenarioId?: CardioScenarioId } = { payload: null };
+  let parsed: { payload: CardioPayload | null } = { payload: null };
 
   try {
     const body = await req.json();
     parsed = extractPayload(body);
 
     if (!parsed.payload) {
-      return NextResponse.json(getFallbackReport(parsed.scenarioId), { status: 200 });
+      return NextResponse.json({ error: 'Invalid request body: expected { payload }' }, { status: 400 });
     }
 
     const upstream = await fetch(BACKEND_URL, {
@@ -42,12 +40,17 @@ export async function POST(req: Request) {
     });
 
     if (!upstream.ok) {
-      return NextResponse.json(getFallbackReport(parsed.scenarioId), { status: 200 });
+      const contentType = upstream.headers.get('content-type') ?? 'application/json';
+      const raw = await upstream.text();
+      return new Response(raw, {
+        status: upstream.status,
+        headers: { 'content-type': contentType },
+      });
     }
 
     const backendJson = await upstream.json();
     return NextResponse.json(backendJson, { status: 200 });
   } catch {
-    return NextResponse.json(getFallbackReport(parsed.scenarioId), { status: 200 });
+    return NextResponse.json({ error: 'Backend engine unreachable' }, { status: 502 });
   }
 }
