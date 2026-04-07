@@ -41,7 +41,7 @@ export default function HomePage() {
       const response = await fetch('/api/cardio/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: parsedPayload, scenarioId: targetScenarioId }),
+        body: JSON.stringify({ payload: parsedPayload }),
       });
 
       if (!response.ok) {
