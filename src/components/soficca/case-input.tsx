@@ -130,15 +130,28 @@ export function CaseInput({
 
         <IntakeSection label="Presenting Complaint">
           <div className="grid grid-cols-1 gap-2">
+            <NumberField
+              label="Age (years)"
+              value={asNumber(state.age)}
+              onChange={(value) => updateStateField('age', value)}
+            />
             <ToggleField
               label="Chest pain present"
               checked={Boolean(state.chest_pain_present)}
               onChange={(checked) => updateStateField('chest_pain_present', checked)}
             />
-            <TextField
+            <SelectField
               label="Pain character"
               value={asString(state.pain_character)}
-              onChange={(value) => updateStateField('pain_character', value || null)}
+              options={[
+                { label: 'None / Unknown', value: '' },
+                { label: 'Pressure', value: 'pressure' },
+                { label: 'Sharp', value: 'sharp' },
+                { label: 'Tearing', value: 'tearing' },
+                { label: 'Burning', value: 'burning' },
+                { label: 'Aching', value: 'aching' },
+              ]}
+              onChange={(value) => updateStateField('pain_character', value)}
             />
             <div className="grid grid-cols-2 gap-2">
               <NumberField
@@ -146,16 +159,30 @@ export function CaseInput({
                 value={asNumber(state.pain_duration_minutes)}
                 onChange={(value) => updateStateField('pain_duration_minutes', value)}
               />
-              <TextField
+              <SelectField
                 label="Pain severity"
                 value={asString(state.pain_severity)}
-                onChange={(value) => updateStateField('pain_severity', value || null)}
+                options={[
+                  { label: 'None / Unknown', value: '' },
+                  { label: 'Mild', value: 'mild' },
+                  { label: 'Moderate', value: 'moderate' },
+                  { label: 'Severe', value: 'severe' },
+                ]}
+                onChange={(value) => updateStateField('pain_severity', value)}
               />
             </div>
-            <TextField
+            <SelectField
               label="Pain radiation"
               value={asString(state.pain_radiation)}
-              onChange={(value) => updateStateField('pain_radiation', value || null)}
+              options={[
+                { label: 'None / Unknown', value: '' },
+                { label: 'Left arm', value: 'left_arm' },
+                { label: 'Jaw', value: 'jaw' },
+                { label: 'Back', value: 'back' },
+                { label: 'Right arm', value: 'right_arm' },
+                { label: 'Both arms', value: 'both_arms' },
+              ]}
+              onChange={(value) => updateStateField('pain_radiation', value)}
             />
           </div>
         </IntakeSection>
@@ -193,11 +220,6 @@ export function CaseInput({
               label="Known CAD"
               checked={Boolean(state.known_cad)}
               onChange={(checked) => updateStateField('known_cad', checked)}
-            />
-            <ToggleField
-              label="Prior MI or known CAD"
-              checked={Boolean(state.prior_mi_or_known_cad)}
-              onChange={(checked) => updateStateField('prior_mi_or_known_cad', checked)}
             />
             <ToggleField
               label="Exertional chest pain"
@@ -315,7 +337,15 @@ function NumberField({ label, value, onChange }: { label: string; value: number 
   );
 }
 
-function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function TextField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <label className="space-y-1">
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
@@ -325,6 +355,35 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
+    </label>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: Array<{ label: string; value: string }>;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="space-y-1">
+      <span className="text-[10px] text-muted-foreground/70">{label}</span>
+      <select
+        className="w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map((option) => (
+          <option key={`${label}-${option.value || 'empty'}`} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }

@@ -5,9 +5,9 @@ import { useMemo, useState } from 'react';
 import { CaseInput } from '@/components/soficca/case-input';
 import { EngineResults } from '@/components/soficca/engine-results';
 import { Header } from '@/components/soficca/header';
-import { getDefaultScenario, mapReportToEngineViewModel } from '@/lib/cardio-ui-adapter';
+import { getDefaultScenario } from '@/lib/cardio-ui-adapter';
 import { cardioScenarios, getScenarioById } from '@/lib/cardio-mocks';
-import type { CardioPayload, CardioScenarioId } from '@/lib/cardio-types';
+import type { CardioPayload, CardioReport, CardioScenarioId } from '@/lib/cardio-types';
 
 function formatPayload(payload: CardioPayload): string {
   return JSON.stringify(payload, null, 2);
@@ -21,7 +21,7 @@ export default function HomePage() {
   const [statusMessage, setStatusMessage] = useState(
     'Ready in backend bridge mode. Selecting a scenario preloads payload and auto-runs evaluation.'
   );
-  const [lastEvaluated, setLastEvaluated] = useState<ReturnType<typeof mapReportToEngineViewModel> | null>(null);
+  const [lastEvaluated, setLastEvaluated] = useState<CardioReport | null>(null);
 
   async function evaluatePayload(
     parsedPayload: CardioPayload,
@@ -31,7 +31,6 @@ export default function HomePage() {
     if (isRunning) return;
 
     setIsRunning(true);
-    const startedAt = Date.now();
     setStatusMessage(
       triggerMode === 'auto'
         ? `Loaded ${targetScenarioId}. Running evaluation automatically...`
@@ -42,18 +41,15 @@ export default function HomePage() {
       const response = await fetch('/api/cardio/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: parsedPayload, scenarioId: targetScenarioId }),
+        body: JSON.stringify({ payload: parsedPayload }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const nextReport = await response.json();
-      const endedAt = Date.now();
-      setLastEvaluated(
-        mapReportToEngineViewModel(nextReport, parsedPayload, new Date(endedAt).toISOString(), endedAt - startedAt)
-      );
+      const nextReport = (await response.json()) as CardioReport;
+      setLastEvaluated(nextReport);
       setStatusMessage(
         triggerMode === 'auto'
           ? `Scenario ${targetScenarioId} preloaded and evaluated. Showing latest evaluated report.`
