@@ -94,28 +94,54 @@ function DecisionSummaryCard({ summary }: { summary: EngineViewModel['decisionSu
         <RouteBadge route={summary.finalRoute} />
       </div>
 
+      <RouteProgression summary={summary} />
+
       <div className="mb-5 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
-        <span>Status: <span className="font-mono text-foreground/80">{summary.status}</span></span>
-        <span>Type: <span className="font-mono text-foreground/80">{summary.decisionType}</span></span>
-        <span>Recommended: <span className="font-mono text-foreground/80">{summary.recommendedRoute ?? '—'}</span></span>
+        <span>
+          Status: <span className="font-mono text-foreground/80">{summary.status}</span>
+        </span>
+        <span>
+          Type: <span className="font-mono text-foreground/80">{summary.decisionType}</span>
+        </span>
+        <span>
+          Recommended: <span className="font-mono text-foreground/80">{summary.recommendedRoute ?? '—'}</span>
+        </span>
       </div>
 
       <p className="text-sm leading-relaxed text-muted-foreground">{summary.rationale}</p>
-
-      {summary.preliminaryRoute && summary.preliminaryRoute !== summary.finalRoute && (
-        <div className="mt-4 flex items-center gap-3 border-t border-border/50 pt-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="text-muted-foreground/60">Preliminary</span>
-            <span className="rounded bg-secondary/80 px-1.5 py-0.5 font-mono text-[10px]">{summary.preliminaryRoute}</span>
-          </span>
-          <span className="text-muted-foreground/30">→</span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-muted-foreground/60">Final</span>
-            <span className="rounded bg-secondary/80 px-1.5 py-0.5 font-mono text-[10px]">{summary.finalRoute}</span>
-          </span>
-        </div>
-      )}
     </section>
+  );
+}
+
+function RouteProgression({ summary }: { summary: EngineViewModel['decisionSummary'] }) {
+  const preliminary = summary.preliminaryRoute ?? '—';
+  const finalRoute = summary.finalRoute ?? '—';
+  const changed = summary.preliminaryRoute && summary.preliminaryRoute !== summary.finalRoute;
+
+  return (
+    <div
+      className={cn(
+        'mb-4 rounded-md border px-3 py-2',
+        changed ? 'border-status-urgent/20 bg-status-urgent/[0.06]' : 'border-border/70 bg-background/25'
+      )}
+    >
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground/80">
+        <span>Route Progression</span>
+        {changed && <span className="rounded-sm bg-status-urgent/20 px-1.5 py-0.5 text-status-urgent">Refined</span>}
+      </div>
+      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded bg-secondary/80 px-1.5 py-0.5 font-mono text-[11px] text-foreground/85">{preliminary}</span>
+        <span className={cn('text-muted-foreground/50', changed && 'text-status-urgent/70')}>→</span>
+        <span
+          className={cn(
+            'rounded px-1.5 py-0.5 font-mono text-[11px]',
+            changed ? 'bg-status-urgent/20 text-status-urgent' : 'bg-secondary/80 text-foreground/85'
+          )}
+        >
+          {finalRoute}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -133,20 +159,18 @@ function SafetyStatusCard({ status }: { status: EngineViewModel['safetyStatus'] 
         )}
       </div>
 
-      <p className="mb-3 text-xs text-muted-foreground">Action: <span className="font-mono text-foreground/80">{status.action}</span></p>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Action: <span className="font-mono text-foreground/80">{status.action}</span>
+      </p>
 
       {hasRedFlags ? (
         <div className="space-y-3">
-          <div className="flex flex-wrap gap-1.5">
-            {status.redFlagsDetected.map((flag) => (
-              <span key={flag} className="inline-flex items-center gap-1.5 rounded-sm bg-secondary/60 px-2 py-1 text-xs text-foreground/80">
-                <span className="h-1 w-1 rounded-full bg-status-emergency/70" />
-                {flag}
-              </span>
-            ))}
-          </div>
+          <ChipRow items={status.redFlagsDetected} tone="secondary" />
           {status.flags.length > 0 && (
-            <p className="text-xs leading-relaxed text-muted-foreground">Flags: {status.flags.join(', ')}</p>
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Safety Flags</span>
+              <ChipRow items={status.flags} tone="danger" />
+            </div>
           )}
           {status.overrideReason && <p className="text-xs leading-relaxed text-muted-foreground">{status.overrideReason}</p>}
         </div>
@@ -158,7 +182,8 @@ function SafetyStatusCard({ status }: { status: EngineViewModel['safetyStatus'] 
 }
 
 function OperationalNextStepsCard({ steps }: { steps: EngineViewModel['operationalNextSteps'] }) {
-  const hasContent = steps.recommendedActions.length > 0 || steps.missingCriticalInfo.length > 0 || steps.conflictsDetected.length > 0;
+  const hasContent =
+    steps.recommendedActions.length > 0 || steps.missingCriticalInfo.length > 0 || steps.conflictsDetected.length > 0;
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
@@ -167,9 +192,13 @@ function OperationalNextStepsCard({ steps }: { steps: EngineViewModel['operation
         <p className="text-xs italic text-muted-foreground">No operational steps required.</p>
       ) : (
         <div className="space-y-4">
-          {steps.recommendedActions.length > 0 && <ListSection title="Recommended Actions" colorClass="text-accent" bulletClass="bg-accent/60" items={steps.recommendedActions} />}
-          {steps.missingCriticalInfo.length > 0 && <ListSection title="Missing Data" colorClass="text-status-urgent" bulletClass="bg-status-urgent/60" items={steps.missingCriticalInfo} />}
-          {steps.conflictsDetected.length > 0 && <ListSection title="Conflicts" colorClass="text-status-info" bulletClass="bg-status-info/60" items={steps.conflictsDetected} />}
+          {steps.recommendedActions.length > 0 && (
+            <ListSection title="Recommended Actions" colorClass="text-accent" bulletClass="bg-accent/60" items={steps.recommendedActions} />
+          )}
+          {steps.missingCriticalInfo.length > 0 && (
+            <ChipSection title="Missing Data" tone="warning" items={steps.missingCriticalInfo} />
+          )}
+          {steps.conflictsDetected.length > 0 && <ChipSection title="Conflicts" tone="info" items={steps.conflictsDetected} />}
         </div>
       )}
     </section>
@@ -192,6 +221,36 @@ function ListSection({ title, items, colorClass, bulletClass }: { title: string;
   );
 }
 
+function ChipSection({ title, items, tone }: { title: string; items: string[]; tone: 'warning' | 'info' }) {
+  return (
+    <div className="space-y-2">
+      <span className={cn('text-[10px] font-medium uppercase tracking-wider', tone === 'warning' ? 'text-status-urgent' : 'text-status-info')}>
+        {title}
+      </span>
+      <ChipRow items={items} tone={tone} />
+    </div>
+  );
+}
+
+function ChipRow({ items, tone }: { items: string[]; tone: 'secondary' | 'warning' | 'info' | 'danger' }) {
+  const toneClass: Record<typeof tone, string> = {
+    secondary: 'bg-secondary/60 text-foreground/85',
+    warning: 'bg-status-urgent/15 text-status-urgent border border-status-urgent/25',
+    info: 'bg-status-info/15 text-status-info border border-status-info/25',
+    danger: 'bg-status-emergency/15 text-status-emergency border border-status-emergency/25',
+  };
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((item, index) => (
+        <span key={`${item}-${index}`} className={cn('rounded-sm px-2 py-1 text-[11px] font-mono', toneClass[tone])}>
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function TechnicalTraceCard({ trace }: { trace: EngineViewModel['technicalTrace'] }) {
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const [formattedTime, setFormattedTime] = useState<string | null>(null);
@@ -205,16 +264,18 @@ function TechnicalTraceCard({ trace }: { trace: EngineViewModel['technicalTrace'
       <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Trace</h3>
 
       <div className="space-y-4">
-        <div className="flex flex-wrap gap-x-4 gap-y-3">
-          <MiniChipGroup title="Rules" items={trace.activatedRules} />
-          <MiniChipGroup title="Rules Triggered" items={trace.rulesTriggered} />
-          <MiniChipGroup title="Policies" items={trace.triggeredPolicies} />
+        <div className="space-y-2">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Triggered IDs</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-3">
+            <MiniChipGroup title="Rules Activated" items={trace.activatedRules} />
+            <MiniChipGroup title="Rules Triggered" items={trace.rulesTriggered} />
+            <MiniChipGroup title="Policies Triggered" items={trace.triggeredPolicies} />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-[11px]">
           <span className="text-muted-foreground/70">
-            Route:{' '}
-            <span className="font-mono text-foreground/70">{trace.preliminaryRoute ?? '—'}</span>
+            Route: <span className="font-mono text-foreground/70">{trace.preliminaryRoute ?? '—'}</span>
             {trace.preliminaryRoute && trace.preliminaryRoute !== trace.finalRoute && (
               <>
                 <span className="mx-1.5 text-muted-foreground/40">→</span>
@@ -223,9 +284,13 @@ function TechnicalTraceCard({ trace }: { trace: EngineViewModel['technicalTrace'
             )}
           </span>
           <span className="text-muted-foreground/40">|</span>
-          <span className="text-muted-foreground/70"><span className="font-mono text-foreground/70">{trace.evaluationDurationMs}ms</span></span>
+          <span className="text-muted-foreground/70">
+            <span className="font-mono text-foreground/70">{trace.evaluationDurationMs}ms</span>
+          </span>
           <span className="text-muted-foreground/40">|</span>
-          <span className="text-muted-foreground/70"><span className="font-mono text-foreground/70">{formattedTime ?? '—'}</span></span>
+          <span className="text-muted-foreground/70">
+            <span className="font-mono text-foreground/70">{formattedTime ?? '—'}</span>
+          </span>
         </div>
 
         {trace.overrideReason && (
@@ -261,7 +326,10 @@ function MiniChipGroup({ title, items }: { title: string; items: string[] }) {
       <span className="text-[10px] text-muted-foreground/70">{title}</span>
       <div className="flex flex-wrap gap-1">
         {items.map((item, index) => (
-          <span key={`${title}-${item}-${index}`} className="rounded-sm bg-secondary/70 px-1.5 py-0.5 font-mono text-[10px] text-secondary-foreground/80">
+          <span
+            key={`${title}-${item}-${index}`}
+            className="rounded-sm bg-secondary/70 px-1.5 py-0.5 font-mono text-[10px] text-secondary-foreground/80"
+          >
             {item}
           </span>
         ))}
@@ -279,9 +347,17 @@ function UrgencyBadge({ urgency }: { urgency: UiUrgency }) {
     pending: 'bg-secondary text-muted-foreground',
   };
 
-  return <span className={cn('rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', styles[urgency])}>{urgency}</span>;
+  return (
+    <span className={cn('rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', styles[urgency])}>
+      {urgency}
+    </span>
+  );
 }
 
 function RouteBadge({ route }: { route: string }) {
-  return <span className="rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] font-medium text-foreground/90">{route}</span>;
+  return (
+    <span className="rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] font-medium text-foreground/90">
+      {route}
+    </span>
+  );
 }

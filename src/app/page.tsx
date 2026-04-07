@@ -19,24 +19,65 @@ export default function HomePage() {
   const [payloadJson, setPayloadJson] = useState<string>(formatPayload(defaultScenario.request));
   const [isRunning, setIsRunning] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
-    'Ready in backend bridge mode. Select a scenario to preload payload, then run evaluation.'
+    'Ready in backend bridge mode. Selecting a scenario preloads payload and auto-runs evaluation.'
   );
   const [lastEvaluated, setLastEvaluated] = useState<ReturnType<typeof mapReportToEngineViewModel> | null>(null);
 
-  const scenario = useMemo(() => getScenarioById(scenarioId), [scenarioId]);
+  async function evaluatePayload(
+    parsedPayload: CardioPayload,
+    targetScenarioId: CardioScenarioId,
+    triggerMode: 'auto' | 'manual'
+  ) {
+    if (isRunning) return;
 
-  function onChangeScenario(id: CardioScenarioId) {
+    setIsRunning(true);
+    const startedAt = Date.now();
+    setStatusMessage(
+      triggerMode === 'auto'
+        ? `Loaded ${targetScenarioId}. Running evaluation automatically...`
+        : 'Running manual evaluation against /api/cardio/report ...'
+    );
+
+    try {
+      const response = await fetch('/api/cardio/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: parsedPayload, scenarioId: targetScenarioId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const nextReport = await response.json();
+      const endedAt = Date.now();
+      setLastEvaluated(
+        mapReportToEngineViewModel(nextReport, parsedPayload, new Date(endedAt).toISOString(), endedAt - startedAt)
+      );
+      setStatusMessage(
+        triggerMode === 'auto'
+          ? `Scenario ${targetScenarioId} preloaded and evaluated. Showing latest evaluated report.`
+          : 'Manual evaluation complete. Showing latest evaluated report.'
+      );
+    } catch (error) {
+      setStatusMessage(`Evaluation failed. Preserving last evaluated report. ${(error as Error).message}`);
+    } finally {
+      setIsRunning(false);
+    }
+  }
+
+  async function onChangeScenario(id: CardioScenarioId) {
     const nextScenario = getScenarioById(id);
     setScenarioId(id);
     setPayloadJson(formatPayload(nextScenario.request));
-    setStatusMessage(`Loaded ${nextScenario.label}. Click Run Evaluation to execute against /api/cardio/report.`);
+    await evaluatePayload(nextScenario.request, id, 'auto');
   }
 
   function onReset() {
     const nextScenario = getDefaultScenario(cardioScenarios);
     setScenarioId(nextScenario.id);
     setPayloadJson(formatPayload(nextScenario.request));
-    setStatusMessage('Reset complete. Payload preloaded; click Run Evaluation to refresh right-side results.');
+    setStatusMessage('Reset complete. Payload preloaded. Scenario selection will auto-run; button supports manual reruns.');
   }
 
   async function onRunEvaluation() {
@@ -51,32 +92,7 @@ export default function HomePage() {
       return;
     }
 
-    setIsRunning(true);
-    const startedAt = Date.now();
-    setStatusMessage('Submitting payload to /api/cardio/report ...');
-
-    try {
-      const response = await fetch('/api/cardio/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: parsedPayload, scenarioId: scenario.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const nextReport = await response.json();
-      const endedAt = Date.now();
-      setLastEvaluated(
-        mapReportToEngineViewModel(nextReport, parsedPayload, new Date(endedAt).toISOString(), endedAt - startedAt)
-      );
-      setStatusMessage('Evaluation complete. Right-side panel now reflects the latest evaluated report.');
-    } catch (error) {
-      setStatusMessage(`Evaluation failed. Preserving last evaluated report. ${(error as Error).message}`);
-    } finally {
-      setIsRunning(false);
-    }
+    await evaluatePayload(parsedPayload, scenarioId, 'manual');
   }
 
   return (
