@@ -87,24 +87,3 @@ export type CardioReport = {
   safety: CardioSafety;
   trace: CardioTrace;
 };
-
-export type CardioPayload = {
-  state: Record<string, unknown>;
-  context: {
-    source: string;
-  };
-};
-
-export type CardioScenarioId =
-  | 'NEEDS_MORE_INFO'
-  | 'ROUTINE_REVIEW'
-  | 'URGENT_ESCALATION'
-  | 'EMERGENCY_ROUTE'
-  | 'DEFERRED_PENDING_DATA';
-
-export type CardioScenario = {
-  id: CardioScenarioId;
-  label: string;
-  request: CardioPayload;
-  report: CardioReport;
-};
