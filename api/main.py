@@ -21,6 +21,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
+from cardio_triage_v1.decision_contract import assert_valid_report
+from cardio_triage_v1.schema import CardioReport
 from cardio_triage_v1.validation import evaluate_readiness as evaluate_cardio_report
 from soficca_core.engine import evaluate as evaluate_decision
 
@@ -129,23 +131,6 @@ DECISION_REPORT_V0_3_SCHEMA: Dict[str, Any] = {
         },
     },
 }
-
-CARDIO_REPORT_V1_SCHEMA: Dict[str, Any] = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://soficca.ai/schemas/cardio_triage_report_v1.json",
-    "title": "Soficca Cardio Triage Report v1",
-    "type": "object",
-    "required": ["ok", "errors", "versions", "decision", "safety", "trace"],
-    "properties": {
-        "ok": {"type": "boolean"},
-        "errors": {"type": "array", "items": {"type": "object"}},
-        "versions": {"type": "object"},
-        "decision": {"type": "object"},
-        "safety": {"type": "object"},
-        "trace": {"type": "object"},
-    },
-}
-
 
 # -----------------------------
 # API Models
@@ -270,7 +255,7 @@ def contract() -> Dict[str, Any]:
 
 @app.get("/v1/cardio/contract")
 def cardio_contract() -> Dict[str, Any]:
-    return CARDIO_REPORT_V1_SCHEMA
+    return CardioReport.model_json_schema()
 
 
 @app.get("/v1/cardio/manual-requests")
@@ -305,7 +290,8 @@ def v1_evaluate_batch(payload: BatchEvaluateRequest) -> BatchEvaluateResponse:
 
 @app.post("/v1/cardio/report")
 def v1_cardio_report(payload: CardioReportRequest) -> Dict[str, Any]:
-    return evaluate_cardio_report({"state": payload.state, "context": payload.context})
+    raw_report = evaluate_cardio_report({"state": payload.state, "context": payload.context})
+    return assert_valid_report(raw_report).model_dump(mode="json")
 
 
 if __name__ == "__main__":
