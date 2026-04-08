@@ -114,7 +114,7 @@ export function CaseInput({
   return (
     <div className="flex h-full flex-col bg-card/30">
       <div className="border-b border-border px-5 py-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Case Intake</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Case Intake</h2>
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
@@ -297,8 +297,8 @@ export function CaseInput({
             onClick={onRunEvaluation}
             disabled={isLoading}
             className={cn(
-              'flex-1 rounded-sm bg-foreground px-4 py-2 text-xs font-semibold text-background transition-colors',
-              isLoading ? 'cursor-not-allowed opacity-50' : 'hover:bg-foreground/90'
+              'flex-1 rounded-sm bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground transition-colors',
+              isLoading ? 'cursor-not-allowed opacity-50' : 'hover:bg-accent/90'
             )}
           >
             {isLoading ? 'Evaluating...' : 'Run Evaluation'}
@@ -306,7 +306,7 @@ export function CaseInput({
           <button
             onClick={onReset}
             disabled={isLoading}
-            className="rounded-sm bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+            className="rounded-sm px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary/50"
           >
             Reset
           </button>
@@ -318,8 +318,8 @@ export function CaseInput({
 
 function IntakeSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-2">
-      <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/80">{label}</h3>
+    <section className="space-y-3 border-t border-border/50 pt-6 first:border-t-0 first:pt-0">
+      <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
       {children}
     </section>
   );
@@ -339,7 +339,7 @@ function NumberField({ label, value, onChange }: { label: string; value: number 
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
       <input
         type="number"
-        className="w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        className="h-9 w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
         value={value ?? ''}
         onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))}
       />
@@ -361,7 +361,7 @@ function TextField({
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
       <input
         type="text"
-        className="w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        className="h-9 w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -384,7 +384,7 @@ function SelectField({
     <label className="space-y-1">
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
       <select
-        className="w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        className="h-9 w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -400,7 +400,7 @@ function SelectField({
 
 function ToggleField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="inline-flex items-center justify-between rounded-sm bg-input/35 px-2.5 py-2 text-xs text-foreground/90 ring-1 ring-border">
+    <label className="inline-flex h-9 items-center justify-between rounded-sm bg-input/35 px-2.5 py-2 text-xs text-foreground/90 ring-1 ring-border">
       <span>{label}</span>
       <input
         type="checkbox"
