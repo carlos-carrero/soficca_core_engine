@@ -57,7 +57,7 @@ export function CaseInput({
   scenarios,
   selectedScenarioId,
   payloadJson,
-  statusMessage,
+  statusMessage: _statusMessage,
   onScenarioChange,
   onPayloadChange,
   onRunEvaluation,
@@ -117,7 +117,7 @@ export function CaseInput({
         <h2 className="text-sm font-medium text-muted-foreground">Case Intake</h2>
       </div>
 
-      <div className="flex-1 space-y-5 overflow-y-auto p-5">
+      <div className="flex-1 space-y-4 overflow-y-auto p-5">
         <IntakeSection label="Scenario">
           <div className="flex flex-wrap gap-1.5">
             {scenarios.map((scenario) => (
@@ -125,8 +125,10 @@ export function CaseInput({
                 key={scenario.id}
                 onClick={() => onScenarioChange(scenario.id)}
                 className={cn(
-                  'rounded-sm px-2.5 py-1 text-xs font-medium transition-colors',
-                  selectedScenarioId === scenario.id ? scenarioToneById[scenario.id].active : scenarioToneById[scenario.id].idle
+                  'h-8 rounded-sm px-3 text-xs font-medium transition-colors',
+                  selectedScenarioId === scenario.id
+                    ? 'border border-accent bg-accent text-accent-foreground shadow-sm'
+                    : scenarioToneById[scenario.id].idle
                 )}
               >
                 {scenario.label}
@@ -260,7 +262,12 @@ export function CaseInput({
         </IntakeSection>
 
         <IntakeSection label="Status">
-          <p className="text-[11px] leading-relaxed text-muted-foreground/80">{statusMessage}</p>
+          <div className="rounded-md border border-border/70 bg-secondary/50 px-3 py-2">
+            <div className="flex items-center gap-2 text-[11px] text-foreground/85">
+              {!isLoading && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />}
+              <span>Deterministic evaluation ready.</span>
+            </div>
+          </div>
           {isLoading && (
             <div className="mt-2 inline-flex items-center gap-1.5 rounded-sm border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] uppercase tracking-wider text-accent">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
@@ -318,9 +325,9 @@ export function CaseInput({
 
 function IntakeSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 border-t border-border/50 pt-6 first:border-t-0 first:pt-0">
-      <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
-      {children}
+    <section className="space-y-2">
+      <h3 className="mb-2 text-sm font-medium text-muted-foreground">{label}</h3>
+      <div className="rounded-lg border border-border/60 bg-card p-4 shadow-sm">{children}</div>
     </section>
   );
 }
@@ -339,7 +346,7 @@ function NumberField({ label, value, onChange }: { label: string; value: number 
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
       <input
         type="number"
-        className="h-9 w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        className="h-9 w-full rounded-sm bg-background px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border transition-colors hover:border-accent/50 focus:border-accent focus:ring-2"
         value={value ?? ''}
         onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))}
       />
@@ -361,7 +368,7 @@ function TextField({
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
       <input
         type="text"
-        className="h-9 w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        className="h-9 w-full rounded-sm bg-background px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border transition-colors hover:border-accent/50 focus:border-accent focus:ring-2"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -384,7 +391,7 @@ function SelectField({
     <label className="space-y-1">
       <span className="text-[10px] text-muted-foreground/70">{label}</span>
       <select
-        className="h-9 w-full rounded-sm bg-input/50 px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border focus:ring-2"
+        className="h-9 w-full rounded-sm bg-background px-2 py-1.5 text-xs text-foreground outline-none ring-1 ring-border transition-colors hover:border-accent/50 focus:border-accent focus:ring-2"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -400,7 +407,7 @@ function SelectField({
 
 function ToggleField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <label className="inline-flex h-9 items-center justify-between rounded-sm bg-input/35 px-2.5 py-2 text-xs text-foreground/90 ring-1 ring-border">
+    <label className="inline-flex h-9 items-center justify-between rounded-sm border border-border bg-background px-2.5 py-2 text-xs text-foreground/90 transition-colors hover:border-accent/50 has-[:checked]:border-accent/30 has-[:checked]:bg-accent/5">
       <span>{label}</span>
       <input
         type="checkbox"
