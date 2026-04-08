@@ -20,7 +20,7 @@ export function EngineResults({ result, isLoading }: EngineResultsProps) {
       <div className="border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-accent" />
-          <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Engine Output</h2>
+          <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Governed Decision Output</h2>
           <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-medium', statusTone.pill)}>
             {result.decision.status}
           </span>
@@ -43,7 +43,7 @@ function LoadingState() {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-6 py-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Engine Output</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Governed Decision Output</h2>
       </div>
       <div className="flex flex-1 items-center justify-center">
         <div className="space-y-4 text-center">
@@ -59,7 +59,7 @@ function EmptyState() {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-6 py-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Engine Output</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Governed Decision Output</h2>
       </div>
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="max-w-xs space-y-4 text-center">
@@ -97,20 +97,32 @@ function SafetyOverrideBanner({ report }: { report: CardioReport }) {
 
 function CaseSummaryBlock({ report }: { report: CardioReport }) {
   const tone = getStatusToneClasses(report.decision.status);
+  const routeLabel = translateRoutePath(report.trace.final_route);
+  const investorSummary =
+    report.decision.status === 'CONFLICT'
+      ? 'Input conflict detected. The engine paused routing to avoid an unsafe classification.'
+      : report.decision.status === 'NEEDS_MORE_INFO'
+        ? 'Required clinical inputs are incomplete. The engine withheld routing until critical fields are confirmed.'
+        : report.decision.clinical_summary;
+
   return (
     <div className={cn('rounded-md border border-border/50 border-l-[3px] bg-secondary/30 px-4 py-4', tone.border)}>
+      <div className="mb-3 rounded-md border border-border/60 bg-background/70 px-3 py-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Decision Contract</p>
+        <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+          <span>
+            Engine: <span className="font-mono">{report.versions.engine}</span>
+          </span>
+          <span>
+            Contract: <span className="font-mono">{report.versions.contract}</span>
+          </span>
+        </div>
+      </div>
       <div className="flex items-center gap-2">
         <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-medium', tone.pill)}>{report.decision.status}</span>
       </div>
-      <p className="mt-3 text-[15px] font-medium leading-relaxed text-foreground/90">{report.decision.clinical_summary}</p>
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span>
-          Engine: <span className="font-mono">{report.versions.engine}</span>
-        </span>
-        <span>
-          Contract: <span className="font-mono">{report.versions.contract}</span>
-        </span>
-      </div>
+      <p className="mt-3 text-base font-semibold leading-relaxed text-foreground">{routeLabel}</p>
+      <p className="mt-2 text-[15px] font-medium leading-relaxed text-foreground/90">{investorSummary}</p>
     </div>
   );
 }
@@ -119,7 +131,7 @@ function DecisionCard({ report }: { report: CardioReport }) {
   const tone = getStatusToneClasses(report.decision.status);
   return (
     <section className={cn('rounded-lg border border-border border-l-[3px] bg-card p-6', tone.border)}>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Decision</h3>
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Clinical Route</h3>
       {renderDecisionByStatus(report)}
     </section>
   );
@@ -131,32 +143,43 @@ function renderDecisionByStatus(report: CardioReport) {
       return (
         <div className="space-y-3">
           <p className="text-sm text-foreground/90">{report.decision.clinical_summary}</p>
-          <div className="rounded-md border border-border/70 bg-background/25 px-3 py-2 text-xs text-muted-foreground">
-            Path: <span className="font-mono text-foreground/85">{report.decision.path ?? '—'}</span>
-          </div>
+          <WhyRouteChosenList
+            facts={[
+              `Final clinical route: ${translateRoutePath(report.trace.final_route)}`,
+              report.decision.reasons[0] ?? 'No high-risk contradiction was detected in structured inputs.',
+              report.trace.rules_triggered[0] ?? 'Deterministic rules completed without safety override.',
+            ]}
+          />
         </div>
       );
 
     case 'NEEDS_MORE_INFO':
       return (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Missing data blocks safe routing. Review <span className="font-medium text-foreground/80">Next Steps</span> for required fields.
-          </p>
+          <p className="text-sm text-muted-foreground">Decision withheld for safety pending completion of required clinical inputs.</p>
+          <WhyRouteChosenList
+            facts={[
+              'Decision withheld for safety.',
+              `${report.decision.missing_fields.length} critical field(s) still require confirmation.`,
+              'Routing resumes automatically once missing fields are completed.',
+            ]}
+          />
         </div>
       );
 
     case 'CONFLICT':
       return (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">Conflicting structured inputs detected; routing deferred.</p>
-          <div className="flex flex-wrap gap-1.5">
-            {(report.trace.conflicts_detected.length ? report.trace.conflicts_detected : ['No conflict IDs']).map((item) => (
-              <span key={item} className="rounded-sm border border-status-info/25 bg-status-info/10 px-2 py-1 text-[11px] font-mono text-status-info">
-                {item}
-              </span>
-            ))}
-          </div>
+          <p className="text-sm text-muted-foreground">Conflicting structured inputs detected; routing deferred for clinician review.</p>
+          <WhyRouteChosenList
+            facts={[
+              'Routing halted because contradictory inputs were detected.',
+              report.trace.conflicts_detected[0]
+                ? translateConflict(report.trace.conflicts_detected[0])
+                : 'Contradictory clinical inputs detected requiring manual review',
+              'Manual verification is required before deterministic routing can continue.',
+            ]}
+          />
         </div>
       );
 
@@ -167,13 +190,13 @@ function renderDecisionByStatus(report: CardioReport) {
             Urgency: <span className="font-mono">{report.decision.urgency_level}</span>
           </div>
           <p className="text-sm text-foreground/90">{report.decision.clinical_summary}</p>
-          <ul className="space-y-1">
-            {(report.decision.reasons.length ? report.decision.reasons : ['No explicit reasons']).map((reason, index) => (
-              <li key={`${reason}-${index}`} className="rounded-sm bg-secondary/70 px-2 py-1 text-xs text-foreground/85">
-                {reason}
-              </li>
-            ))}
-          </ul>
+          <WhyRouteChosenList
+            facts={[
+              report.decision.reasons[0] ?? 'Risk signals met escalation criteria.',
+              report.trace.rules_triggered[0] ?? 'Safety and decision rules aligned on immediate escalation.',
+              `Final clinical route: ${translateRoutePath(report.trace.final_route)}`,
+            ]}
+          />
         </div>
       );
 
@@ -195,12 +218,19 @@ function SafetyStatusCard({ report }: { report: CardioReport }) {
       )}
     >
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Safety Layer</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Safety Verification</h3>
       </div>
 
-      <p className="mb-3 text-xs text-muted-foreground">
-        Action: <span className="font-mono text-foreground/80">{report.safety.action}</span>
-      </p>
+      {report.safety.action === 'NONE' ? (
+        <div className="mb-3 space-y-1">
+          <p className="text-sm font-medium text-foreground/90">Safety status: Clear</p>
+          <p className="text-xs text-muted-foreground">No emergency red flags detected. Required fields complete.</p>
+        </div>
+      ) : (
+        <div className="mb-3 rounded-md border border-status-emergency/35 bg-status-emergency/10 px-3 py-2 text-xs text-status-emergency">
+          Safety policy overrode baseline route due to risk triggers.
+        </div>
+      )}
 
       <div className="space-y-2">
         <ChipRow items={report.safety.triggers.length ? report.safety.triggers : ['No active safety triggers']} tone="secondary" />
@@ -212,26 +242,49 @@ function SafetyStatusCard({ report }: { report: CardioReport }) {
 
 function OperationalNextStepsCard({ report }: { report: CardioReport }) {
   const tone = getStatusToneClasses(report.decision.status);
+  const intakeActions = [
+    ...report.decision.missing_fields.map((field) => translateMissingField(field)),
+    ...report.trace.conflicts_detected.map((conflict) => translateConflict(conflict)),
+  ];
   const hasContent =
-    report.decision.required_actions.length > 0 || report.decision.missing_fields.length > 0 || report.trace.conflicts_detected.length > 0;
+    report.decision.required_actions.length > 0 || intakeActions.length > 0;
 
   return (
     <section className={cn('rounded-lg border border-border border-l-[3px] bg-card p-5', tone.border)}>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Next Steps</h3>
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Action Plan</h3>
       {!hasContent ? (
         <p className="text-xs italic text-muted-foreground">No operational steps required.</p>
       ) : (
         <div className="space-y-4">
           {report.decision.required_actions.length > 0 && (
-            <ListSection title="Recommended Actions" colorClass="text-accent" bulletClass="bg-accent/60" items={report.decision.required_actions} />
+            <ListSection
+              title="Recommended Clinical Action"
+              colorClass="text-accent"
+              bulletClass="bg-accent/60"
+              items={report.decision.required_actions}
+            />
           )}
-          {report.decision.missing_fields.length > 0 && (
-            <ChipSection title="Missing Data" tone="warning" items={report.decision.missing_fields} />
-          )}
-          {report.trace.conflicts_detected.length > 0 && <ChipSection title="Conflicts" tone="info" items={report.trace.conflicts_detected} />}
+          {intakeActions.length > 0 && <ChipSection title="Required Intake Action" tone="warning" items={intakeActions} />
+          }
         </div>
       )}
     </section>
+  );
+}
+
+function WhyRouteChosenList({ facts }: { facts: string[] }) {
+  return (
+    <div className="space-y-2 rounded-md border border-border/70 bg-background/25 px-3 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Why this route was chosen</p>
+      <ul className="space-y-1.5">
+        {facts.slice(0, 3).map((fact, index) => (
+          <li key={`${fact}-${index}`} className="flex items-start gap-2 text-xs text-foreground/85">
+            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent/80" />
+            {fact}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -284,10 +337,10 @@ function ChipRow({ items, tone }: { items: string[]; tone: 'secondary' | 'warnin
 function TechnicalTraceCard({ report }: { report: CardioReport }) {
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const tone = getStatusToneClasses(report.decision.status);
-  const routeLabel =
-    report.trace.preliminary_route && report.trace.preliminary_route !== report.trace.final_route
-      ? `${report.trace.preliminary_route} → ${report.trace.final_route ?? '—'}`
-      : report.trace.final_route ?? report.trace.preliminary_route ?? '—';
+  const preliminaryRoute = translateRoutePath(report.trace.preliminary_route);
+  const finalRoute = translateRoutePath(report.trace.final_route);
+  const hasOverride = report.trace.preliminary_route !== report.trace.final_route;
+  const routeLabel = `Preliminary route: ${preliminaryRoute} → Final route: ${finalRoute}`;
 
   return (
     <section className={cn('rounded-lg border border-border border-l-[3px] bg-card p-5', tone.border)}>
@@ -296,8 +349,13 @@ function TechnicalTraceCard({ report }: { report: CardioReport }) {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-border/70 bg-secondary/40 px-2.5 py-1 text-[11px] text-muted-foreground">
-            Route: <span className="font-mono text-foreground/80">{routeLabel}</span>
+            Route: <span className="text-foreground/80">{routeLabel}</span>
           </span>
+          {!hasOverride && (
+            <span className="rounded-full border border-border/70 bg-secondary/40 px-2.5 py-1 text-[11px] text-muted-foreground">
+              No override applied
+            </span>
+          )}
           <span className="rounded-full border border-border/70 bg-secondary/40 px-2.5 py-1 text-[11px] text-muted-foreground">
             Rules triggered: <span className="font-mono text-foreground/80">{report.trace.rules_triggered.length}</span>
           </span>
@@ -312,7 +370,7 @@ function TechnicalTraceCard({ report }: { report: CardioReport }) {
             className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/60 underline-offset-4 transition-colors hover:text-muted-foreground hover:underline"
           >
             <span className={cn('transition-transform', isJsonExpanded && 'rotate-90')}>{'▸'}</span>
-            Raw Trace JSON
+            Technical Contract View
           </button>
           {isJsonExpanded && (
             <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-background/50 p-3 font-mono text-[10px] text-muted-foreground/70">
@@ -347,5 +405,54 @@ function getStatusToneClasses(status: CardioReport['decision']['status']) {
         border: 'border-l-red-500/80',
         pill: 'border-red-500/30 bg-red-500/15 text-red-300',
       };
+  }
+}
+
+function translateRoutePath(path: string | null): string {
+  switch (path) {
+    case 'PATH_ROUTINE':
+      return 'Routine Review';
+    case 'PATH_URGENT_SAME_DAY':
+      return 'Same-Day Urgent Review';
+    case 'PATH_EMERGENCY_NOW':
+      return 'Emergency Escalation';
+    default:
+      return 'Safe Routing Deferred';
+  }
+}
+
+function translateMissingField(field: string): string {
+  switch (field) {
+    case 'pain_duration_minutes':
+      return 'Confirm chest pain duration';
+    case 'pain_character':
+      return 'Confirm chest pain character';
+    case 'pain_radiation':
+      return 'Confirm radiation';
+    case 'prior_mi_or_known_cad':
+      return 'Confirm prior MI / known CAD';
+    default:
+      return field
+        .split('_')
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+  }
+}
+
+function translateConflict(conflict: string): string {
+  switch (conflict) {
+    case 'CONFLICT_PAIN_SEVERITY_WITHOUT_CHEST_PAIN':
+      return 'Pain severity was provided while chest pain is marked absent';
+    case 'CONFLICT_RADIATION_WITHOUT_CHEST_PAIN':
+      return 'Radiation was provided while chest pain is marked absent';
+    case 'CONFLICT_PAIN_CHARACTER_WITHOUT_CHEST_PAIN':
+      return 'Pain character was provided while chest pain is marked absent';
+    case 'CONFLICT_PAIN_DURATION_WITHOUT_CHEST_PAIN':
+      return 'Pain duration was provided while chest pain is marked absent';
+    case 'CONFLICT_EXERTIONAL_WITHOUT_CHEST_PAIN':
+      return 'Exertional history was provided while chest pain is marked absent';
+    default:
+      return 'Contradictory clinical inputs detected requiring manual review';
   }
 }
