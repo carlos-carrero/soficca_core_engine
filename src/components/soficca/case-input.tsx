@@ -117,7 +117,7 @@ export function CaseInput({
         <h2 className="text-sm font-medium text-muted-foreground">Case Intake</h2>
       </div>
 
-      <div className="flex-1 space-y-5 overflow-y-auto p-5">
+      <div className="flex-1 space-y-4 overflow-y-auto p-5">
         <IntakeSection label="Scenario">
           <div className="flex flex-wrap gap-1.5">
             {scenarios.map((scenario) => (
@@ -125,8 +125,10 @@ export function CaseInput({
                 key={scenario.id}
                 onClick={() => onScenarioChange(scenario.id)}
                 className={cn(
-                  'rounded-sm px-2.5 py-1 text-xs font-medium transition-colors',
-                  selectedScenarioId === scenario.id ? scenarioToneById[scenario.id].active : scenarioToneById[scenario.id].idle
+                  'h-8 rounded-sm px-3 text-xs font-medium transition-colors',
+                  selectedScenarioId === scenario.id
+                    ? 'border border-accent bg-accent text-accent-foreground shadow-sm'
+                    : scenarioToneById[scenario.id].idle
                 )}
               >
                 {scenario.label}
@@ -263,7 +265,7 @@ export function CaseInput({
           <div className="rounded-md border border-border/70 bg-secondary/50 px-3 py-2">
             <div className="flex items-center gap-2 text-[11px] text-foreground/85">
               {!isLoading && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />}
-              <span>Evaluation framework active and connected.</span>
+              <span>Deterministic evaluation ready.</span>
             </div>
           </div>
           {isLoading && (
