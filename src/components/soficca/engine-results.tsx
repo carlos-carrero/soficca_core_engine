@@ -36,6 +36,14 @@ export function EngineResults({ result, isLoading }: EngineResultsProps) {
         <SafetyStatusCard report={result} />
         <OperationalNextStepsCard report={result} />
         <TechnicalTraceCard report={result} />
+        <section className="rounded-md border border-border/50 bg-background/30 px-4 py-3 text-[11px] text-muted-foreground/70">
+          Infrastructure capability: The same decision framework supports versioned rulesets, safety policies, and contracts across
+          additional clinical pathways.
+        </section>
+      </div>
+      <div className="border-t border-border/60 px-6 py-3 text-[11px] text-muted-foreground/70">
+        Infrastructure capability: This decision framework supports versioned rulesets, safety policies, and contracts across additional
+        clinical pathways.
       </div>
       <div className="border-t border-border/60 px-6 py-3 text-[11px] text-muted-foreground/70">
         Infrastructure capability: This decision framework supports versioned rulesets, safety policies, and contracts across additional
