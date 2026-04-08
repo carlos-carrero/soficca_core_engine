@@ -45,6 +45,10 @@ export function EngineResults({ result, isLoading }: EngineResultsProps) {
         Infrastructure capability: This decision framework supports versioned rulesets, safety policies, and contracts across additional
         clinical pathways.
       </div>
+      <div className="border-t border-border/60 px-6 py-3 text-[11px] text-muted-foreground/70">
+        Infrastructure capability: This decision framework supports versioned rulesets, safety policies, and contracts across additional
+        clinical pathways.
+      </div>
     </div>
   );
 }
@@ -112,25 +116,25 @@ function CaseSummaryBlock({ report }: { report: CardioReport }) {
     report.decision.status === 'CONFLICT'
       ? 'Conflicting inputs blocked safe deterministic routing.'
       : report.decision.status === 'NEEDS_MORE_INFO'
-        ? 'Critical clinical inputs are incomplete.'
+        ? 'Critical clinical inputs remain incomplete.'
         : getOutcomeSubtitle(report.trace.final_route);
   const outcomeHeadline = getOutcomeHeadline(report.decision.status, routeLabel);
 
   return (
     <div className={cn('rounded-md border border-border/50 border-l-[3px] bg-secondary/30 px-4 py-4', tone.border)}>
-      <div className="mb-3 rounded-md border border-border/60 bg-background/70 px-3 py-2">
+      <div className="mb-3 rounded-md border border-border/40 bg-background/40 px-3 py-1.5">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">GOVERNED CONTRACT</p>
         <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-          <span className="rounded-sm border border-border/60 bg-secondary/40 px-2 py-1 text-[10px] text-muted-foreground">
+          <span className="rounded-sm border border-border/40 bg-secondary/20 px-2 py-0.5 text-[10px] text-muted-foreground">
             Engine: <span className="text-foreground/85">Cardio Bridge v1</span>
           </span>
-          <span className="rounded-sm border border-border/60 bg-secondary/40 px-2 py-1 text-[10px] text-muted-foreground">
+          <span className="rounded-sm border border-border/40 bg-secondary/20 px-2 py-0.5 text-[10px] text-muted-foreground">
             Ruleset: <span className="text-foreground/85">Cardio v1</span>
           </span>
-          <span className="rounded-sm border border-border/60 bg-secondary/40 px-2 py-1 text-[10px] text-muted-foreground">
+          <span className="rounded-sm border border-border/40 bg-secondary/20 px-2 py-0.5 text-[10px] text-muted-foreground">
             Safety Policy: <span className="text-foreground/85">Cardio v1</span>
           </span>
-          <span className="rounded-sm border border-border/60 bg-secondary/40 px-2 py-1 text-[10px] text-muted-foreground">
+          <span className="rounded-sm border border-border/40 bg-secondary/20 px-2 py-0.5 text-[10px] text-muted-foreground">
             Contract: <span className="text-foreground/85">Cardio Report v1</span>
           </span>
         </div>
@@ -138,13 +142,8 @@ function CaseSummaryBlock({ report }: { report: CardioReport }) {
       <div className="flex items-center gap-2">
         <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-medium', tone.pill)}>{report.decision.status}</span>
       </div>
-      <p className="mt-3 text-xl font-semibold leading-tight text-foreground">{outcomeHeadline}</p>
-      <p className="mt-2 text-sm leading-relaxed text-foreground/90">{investorSummary}</p>
-      {report.decision.status === 'CONFLICT' || report.decision.status === 'NEEDS_MORE_INFO' ? null : (
-        <p className="mt-1 text-[11px] text-muted-foreground/80">Route outcome: {routeLabel}</p>
-      )}
-      {report.decision.status === 'CONFLICT' && <p className="mt-1 text-[11px] text-muted-foreground/80">Route outcome: Safe Routing Deferred</p>}
-      {report.decision.status === 'NEEDS_MORE_INFO' && <p className="mt-1 text-[11px] text-muted-foreground/80">Route outcome: Safe Routing Deferred</p>}
+      <p className="mt-3 text-2xl font-bold leading-tight text-foreground">{outcomeHeadline}</p>
+      <p className="mt-3 text-sm leading-relaxed text-foreground/90">{investorSummary}</p>
     </div>
   );
 }
@@ -152,13 +151,13 @@ function CaseSummaryBlock({ report }: { report: CardioReport }) {
 function getOutcomeSubtitle(path: CardioReport['trace']['final_route']): string {
   switch (path) {
     case 'PATH_ROUTINE':
-      return 'Stable complete case with no urgent or emergency pattern detected.';
+      return 'No urgent or emergency pattern detected.';
     case 'PATH_URGENT_SAME_DAY':
-      return 'Deterministic risk rule matched an urgent same-day review pattern.';
+      return 'Urgent same-day risk pattern detected.';
     case 'PATH_EMERGENCY_NOW':
-      return 'Emergency red-flag criteria triggered immediate escalation.';
+      return 'Emergency red-flag criteria triggered.';
     default:
-      return 'Deterministic routing outcome generated for governed review.';
+      return 'Governed decision generated.';
   }
 }
 
@@ -175,7 +174,7 @@ function getOutcomeHeadline(status: CardioReport['decision']['status'], routeLab
 
 function getDecisionCardTitle(report: CardioReport): string {
   if (report.decision.status === 'CONFLICT' || report.decision.status === 'NEEDS_MORE_INFO') {
-    return 'Routing Status';
+    return 'Decision Status';
   }
 
   switch (report.trace.final_route) {
@@ -184,7 +183,7 @@ function getDecisionCardTitle(report: CardioReport): string {
     case 'PATH_EMERGENCY_NOW':
       return 'Clinical Route';
     default:
-      return 'Routing Status';
+      return 'Decision Status';
   }
 }
 
@@ -203,12 +202,10 @@ function renderDecisionByStatus(report: CardioReport) {
     report.decision.status === 'CONFLICT' || report.decision.status === 'NEEDS_MORE_INFO'
       ? 'Decision Withheld'
       : translateRoutePath(report.trace.final_route);
-  const decisiveInputs = getDecisiveInputs(report).slice(0, 4);
   switch (report.decision.status) {
     case 'DECIDED':
       return (
         <div className="space-y-3">
-          <InlineDecisiveInputsList inputs={decisiveInputs} />
           <WhyRouteChosenList
             facts={[
               `Key facts: ${buildKeyFacts(report)}`,
@@ -226,7 +223,6 @@ function renderDecisionByStatus(report: CardioReport) {
             <p className="text-base font-semibold text-foreground">Decision Withheld Pending Critical Inputs</p>
             <p className="text-xs text-muted-foreground">Critical clinical inputs are incomplete.</p>
           </div>
-          <InlineDecisiveInputsList inputs={decisiveInputs} />
           <WhyRouteChosenList
             facts={[
               `Key facts: ${buildKeyFacts(report)}`,
@@ -244,7 +240,6 @@ function renderDecisionByStatus(report: CardioReport) {
             <p className="text-base font-semibold text-foreground">Routing Paused for Safety</p>
             <p className="text-xs text-muted-foreground">Conflicting inputs blocked safe deterministic routing.</p>
           </div>
-          <InlineDecisiveInputsList inputs={decisiveInputs} />
           <WhyRouteChosenList
             facts={[
               `Key facts: ${buildKeyFacts(report)}`,
@@ -261,7 +256,6 @@ function renderDecisionByStatus(report: CardioReport) {
           <div className="rounded-md border border-status-emergency/35 bg-status-emergency/10 px-3 py-2 text-xs text-status-emergency">
             Emergency red-flag criteria triggered immediate escalation.
           </div>
-          <InlineDecisiveInputsList inputs={decisiveInputs} />
           <WhyRouteChosenList
             facts={[
               `Key facts: ${buildKeyFacts(report)}`,
@@ -279,18 +273,23 @@ function renderDecisionByStatus(report: CardioReport) {
   }
 }
 
-function InlineDecisiveInputsList({ inputs }: { inputs: string[] }) {
+function DecisiveInputsCard({ report }: { report: CardioReport }) {
+  const tone = getStatusToneClasses(report.decision.status);
+  const curatedInputs = getCuratedDecisiveInputs(report);
+
+  if (curatedInputs.length === 0) return null;
+
   return (
-    <div className="space-y-2 rounded-md border border-border/60 bg-background/25 px-3 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Decisive Inputs</p>
-      <ul className="space-y-1">
-        {inputs.map((input, index) => (
-          <li key={`${input}-${index}`} className="text-xs text-foreground/85">
-            {input}
+    <section className={cn('rounded-lg border border-border border-l-[3px] bg-card p-5', tone.border)}>
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Decisive Inputs</h3>
+      <ul className="space-y-1.5">
+        {curatedInputs.map((line, index) => (
+          <li key={`${line}-${index}`} className="rounded-sm bg-secondary/50 px-2 py-1 text-xs text-foreground/85">
+            {line}
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 
@@ -433,12 +432,15 @@ function ChipRow({ items, tone }: { items: string[]; tone: 'secondary' | 'warnin
 function TechnicalTraceCard({ report }: { report: CardioReport }) {
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const tone = getStatusToneClasses(report.decision.status);
-  const preliminaryRoute = translateRoutePath(report.trace.preliminary_route);
+  const preliminaryRoute =
+    report.decision.status === 'CONFLICT' || report.decision.status === 'NEEDS_MORE_INFO'
+      ? 'Decision Withheld'
+      : translateRoutePath(report.trace.preliminary_route);
   const finalRoute = translateRoutePath(report.trace.final_route);
   const hasOverride = report.trace.preliminary_route !== report.trace.final_route;
   const traceOutcome =
     report.decision.status === 'CONFLICT' || report.decision.status === 'NEEDS_MORE_INFO' ? 'Decision Withheld' : finalRoute;
-  const routeLabel = `Route lineage: ${preliminaryRoute} → ${traceOutcome}`;
+  const routeLabel = `Decision lineage: ${preliminaryRoute} → ${traceOutcome}`;
 
   return (
     <section className={cn('rounded-lg border border-border border-l-[3px] bg-card p-5', tone.border)}>
@@ -594,21 +596,58 @@ function translatePolicyId(policy: string): string {
 }
 
 function buildKeyFacts(report: CardioReport): string {
-  const conciseInputs = getDecisiveInputs(report).slice(0, 2).join('; ');
-  return conciseInputs || 'Structured intake data evaluated against deterministic rules.';
+  const curatedInputs = getCuratedDecisiveInputs(report).slice(0, 2).join('; ');
+  if (curatedInputs) return curatedInputs;
+
+  if (report.decision.status === 'NEEDS_MORE_INFO') {
+    return 'Chest pain present; critical intake fields remain incomplete.';
+  }
+  if (report.decision.status === 'CONFLICT') {
+    return 'Input values are contradictory across key symptom fields.';
+  }
+  if (report.decision.status === 'ESCALATED') {
+    return 'Emergency red-flag profile was detected in structured intake.';
+  }
+  return 'Clinical intake profile is complete and internally consistent.';
 }
 
 function buildRiskInterpretation(report: CardioReport): string {
   if (report.decision.status === 'NEEDS_MORE_INFO') {
-    return 'Critical intake fields are incomplete, so the engine withheld routing for safety.';
+    return 'Deterministic routing was withheld because required fields were missing.';
   }
   if (report.decision.status === 'CONFLICT') {
-    return 'Conflicting clinical inputs require manual reconciliation before routing can proceed.';
+    return 'Routing paused because conflicting inputs prevented safe deterministic classification.';
   }
   if (report.decision.status === 'ESCALATED') {
-    return 'Red-flag indicators met escalation thresholds under safety policy controls.';
+    return 'Risk thresholds for immediate escalation were met under safety policy controls.';
   }
-  return report.decision.reasons[0] ?? 'No risk override was required for the final route.';
+  return 'No escalation or withholding thresholds were met after deterministic rule evaluation.';
+}
+
+function getCuratedDecisiveInputs(report: CardioReport): string[] {
+  const evidence = report.trace.evidence ?? {};
+  const state = Object.fromEntries(Object.entries(evidence).map(([key, value]) => [key, value?.value]));
+  const facts: string[] = [];
+
+  if (typeof state.chest_pain_present === 'boolean') {
+    facts.push(`Chest pain: ${state.chest_pain_present ? 'Present' : 'Absent'}`);
+  }
+  if (typeof state.pain_severity === 'string' && state.pain_severity) {
+    facts.push(`Pain severity: ${state.pain_severity}`);
+  } else if (report.decision.status === 'NEEDS_MORE_INFO') {
+    facts.push('Pain severity unconfirmed');
+  }
+  if (typeof state.pain_radiation === 'string' && state.pain_radiation) {
+    facts.push(`Radiation: ${state.pain_radiation.replace(/_/g, ' ')}`);
+  }
+  if (typeof state.exertional_chest_pain === 'boolean' && state.exertional_chest_pain) {
+    facts.push('Exertional chest pain reported');
+  }
+  if (typeof state.syncope === 'boolean' && state.syncope) {
+    facts.push('Syncope present');
+  }
+
+  return facts.slice(0, 5);
 }
 
 function getDecisiveInputs(report: CardioReport): string[] {
