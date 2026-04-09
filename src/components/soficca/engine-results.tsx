@@ -627,8 +627,6 @@ function getCuratedDecisiveInputs(report: CardioReport): string[] {
   }
   if (typeof state.pain_severity === 'string' && state.pain_severity) {
     facts.push(`Pain severity: ${state.pain_severity}`);
-  } else if (report.decision.status === 'NEEDS_MORE_INFO') {
-    facts.push('Pain severity unconfirmed');
   }
   if (typeof state.pain_radiation === 'string' && state.pain_radiation) {
     facts.push(`Radiation: ${state.pain_radiation.replace(/_/g, ' ')}`);
