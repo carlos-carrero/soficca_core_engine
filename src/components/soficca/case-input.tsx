@@ -79,7 +79,8 @@ export function CaseInput({
 
   function updateStateField(field: string, value: unknown) {
     if (!parsedPayload) return;
-    const newState = { ...parsedPayload.state };
+    // Cast to Record<string, any> to bypass strict indexing errors
+    const newState: Record<string, any> = { ...parsedPayload.state };
 
     if (value === '' || value === null) {
       delete newState[field];
@@ -89,13 +90,14 @@ export function CaseInput({
 
     updatePayload({
       ...parsedPayload,
-      state: newState,
+      state: newState as CardioPayload['state'],
     });
   }
 
   function updateContextField(field: string, value: string) {
     if (!parsedPayload) return;
-    const newContext = { ...parsedPayload.context };
+    // Cast to Record<string, any> to bypass strict indexing errors
+    const newContext: Record<string, any> = { ...parsedPayload.context };
 
     if (value === '' || value === null) {
       delete newContext[field];
@@ -105,7 +107,7 @@ export function CaseInput({
 
     updatePayload({
       ...parsedPayload,
-      context: newContext,
+      context: { source: 'USER', ...newContext } as CardioPayload['context'],
     });
   }
 
@@ -317,9 +319,6 @@ export function CaseInput({
           >
             Reset
           </button>
-        </div>
-        <div className="mt-3 border-t border-border/60 py-3 text-center text-[10px] text-muted-foreground/60">
-          Routing is deterministic and policy-governed. Generative AI is not used for final clinical decisions.
         </div>
       </div>
     </div>

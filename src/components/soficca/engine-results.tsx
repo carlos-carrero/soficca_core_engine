@@ -36,18 +36,9 @@ export function EngineResults({ result, isLoading }: EngineResultsProps) {
         <SafetyStatusCard report={result} />
         <OperationalNextStepsCard report={result} />
         <TechnicalTraceCard report={result} />
-        <section className="rounded-md border border-border/50 bg-background/30 px-4 py-3 text-[11px] text-muted-foreground/70">
-          Infrastructure capability: The same decision framework supports versioned rulesets, safety policies, and contracts across
-          additional clinical pathways.
-        </section>
       </div>
       <div className="border-t border-border/60 px-6 py-3 text-[11px] text-muted-foreground/70">
-        Infrastructure capability: This decision framework supports versioned rulesets, safety policies, and contracts across additional
-        clinical pathways.
-      </div>
-      <div className="border-t border-border/60 px-6 py-3 text-[11px] text-muted-foreground/70">
-        Infrastructure capability: This decision framework supports versioned rulesets, safety policies, and contracts across additional
-        clinical pathways.
+        Infrastructure capability: Versioned rulesets, safety policies, and contracts across clinical pathways.
       </div>
     </div>
   );
@@ -166,7 +157,7 @@ function getOutcomeHeadline(status: CardioReport['decision']['status'], routeLab
     case 'CONFLICT':
       return 'Routing Paused for Safety';
     case 'NEEDS_MORE_INFO':
-      return 'Decision Withheld Pending Critical Inputs';
+      return 'Decision Withheld Pending Critical Inputs.';
     default:
       return routeLabel;
   }
@@ -198,10 +189,8 @@ function DecisionCard({ report }: { report: CardioReport }) {
 }
 
 function renderDecisionByStatus(report: CardioReport) {
-  const routeOutcome =
-    report.decision.status === 'CONFLICT' || report.decision.status === 'NEEDS_MORE_INFO'
-      ? 'Decision Withheld'
-      : translateRoutePath(report.trace.final_route);
+  const outcomeHeadline = getOutcomeHeadline(report.decision.status, translateRoutePath(report.trace.final_route));
+  const routeOutcome = outcomeHeadline;
   switch (report.decision.status) {
     case 'DECIDED':
       return (
@@ -220,7 +209,7 @@ function renderDecisionByStatus(report: CardioReport) {
       return (
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-base font-semibold text-foreground">Decision Withheld Pending Critical Inputs</p>
+            <p className="text-base font-semibold text-foreground">{outcomeHeadline}</p>
             <p className="text-xs text-muted-foreground">Critical clinical inputs are incomplete.</p>
           </div>
           <WhyRouteChosenList
@@ -237,7 +226,7 @@ function renderDecisionByStatus(report: CardioReport) {
       return (
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-base font-semibold text-foreground">Routing Paused for Safety</p>
+            <p className="text-base font-semibold text-foreground">{outcomeHeadline}</p>
             <p className="text-xs text-muted-foreground">Conflicting inputs blocked safe deterministic routing.</p>
           </div>
           <WhyRouteChosenList
@@ -629,25 +618,27 @@ function getCuratedDecisiveInputs(report: CardioReport): string[] {
   const state = Object.fromEntries(Object.entries(evidence).map(([key, value]) => [key, value?.value]));
   const facts: string[] = [];
 
+  // 1. Strictly output what is ACTUALLY present in the state (no artificial hiding)
   if (typeof state.chest_pain_present === 'boolean') {
     facts.push(`Chest pain: ${state.chest_pain_present ? 'Present' : 'Absent'}`);
   }
-  if (typeof state.pain_severity === 'string' && state.pain_severity) {
-    facts.push(`Pain severity: ${state.pain_severity}`);
-  } else if (report.decision.status === 'NEEDS_MORE_INFO') {
-    facts.push('Pain severity unconfirmed');
-  }
-  if (typeof state.pain_radiation === 'string' && state.pain_radiation) {
-    facts.push(`Radiation: ${state.pain_radiation.replace(/_/g, ' ')}`);
-  }
-  if (typeof state.exertional_chest_pain === 'boolean' && state.exertional_chest_pain) {
-    facts.push('Exertional chest pain reported');
-  }
-  if (typeof state.syncope === 'boolean' && state.syncope) {
-    facts.push('Syncope present');
+  if (state.pain_severity) facts.push(`Severity: ${state.pain_severity}`);
+  if (state.pain_radiation) facts.push(`Radiation: ${String(state.pain_radiation).replace(/_/g, ' ')}`);
+  if (state.pain_duration_minutes) facts.push(`Duration: ${state.pain_duration_minutes} min`);
+  if (state.syncope) facts.push('Syncope present');
+  if (state.exertional_chest_pain) facts.push('Exertional history reported');
+
+  // 2. Dynamically append missing fields ONLY if the engine requests them
+  if (report.decision.status === 'NEEDS_MORE_INFO' && Array.isArray(report.decision.missing_fields)) {
+    report.decision.missing_fields.forEach((field) => {
+      const formatted = field.split('_').join(' ');
+      const capitalized = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      facts.push(`${capitalized} unconfirmed`);
+    });
   }
 
-  return facts.slice(0, 5);
+  // Return everything the system dictates. No artificial .slice() caps.
+  return facts;
 }
 
 function getDecisiveInputs(report: CardioReport): string[] {
