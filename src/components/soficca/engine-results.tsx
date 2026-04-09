@@ -614,10 +614,6 @@ function buildRiskInterpretation(report: CardioReport): string {
 }
 
 function getCuratedDecisiveInputs(report: CardioReport): string[] {
-  if (report.decision.status === 'NEEDS_MORE_INFO') {
-    return ['Chest pain present', 'Pain severity unconfirmed', 'Pain radiation unconfirmed', 'Pain duration unconfirmed'];
-  }
-
   const evidence = report.trace.evidence ?? {};
   const state = Object.fromEntries(Object.entries(evidence).map(([key, value]) => [key, value?.value]));
   const facts: string[] = [];
@@ -640,13 +636,9 @@ function getCuratedDecisiveInputs(report: CardioReport): string[] {
       facts.push(`${capitalized} unconfirmed`);
     });
   }
-  if (facts.length < 3) {
-    facts.push('Safety policy checks completed');
+  if (facts.length === 0) {
+    facts.push('No structured evidence available in trace');
   }
-
-  // 4. Crucial Flags
-  if (state.syncope) facts.push('Syncope present');
-  if (state.exertional_chest_pain) facts.push('Exertional history reported');
 
   // Return everything the system dictates. No artificial .slice() caps.
   return facts;

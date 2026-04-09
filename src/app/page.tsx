@@ -13,6 +13,24 @@ function formatPayload(payload: CardioPayload): string {
   return JSON.stringify(payload, null, 2);
 }
 
+function augmentReportWithPayloadEvidence(report: CardioReport, payload: CardioPayload): CardioReport {
+  const payloadEvidence = Object.fromEntries(
+    Object.entries(payload.state ?? {}).map(([key, value]) => [key, { value }])
+  );
+  const existingEvidence = report.trace?.evidence ?? {};
+
+  return {
+    ...report,
+    trace: {
+      ...report.trace,
+      evidence: {
+        ...payloadEvidence,
+        ...existingEvidence,
+      },
+    },
+  };
+}
+
 export default function HomePage() {
   const defaultScenario = useMemo(() => getDefaultScenario(cardioScenarios), []);
   const [scenarioId, setScenarioId] = useState<CardioScenarioId>(defaultScenario.id);
@@ -49,7 +67,7 @@ export default function HomePage() {
       }
 
       const nextReport = (await response.json()) as CardioReport;
-      setLastEvaluated(nextReport);
+      setLastEvaluated(augmentReportWithPayloadEvidence(nextReport, parsedPayload));
       setStatusMessage(
         triggerMode === 'auto'
           ? `Scenario ${targetScenarioId} preloaded and evaluated. Showing latest evaluated report.`
