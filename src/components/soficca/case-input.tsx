@@ -318,9 +318,6 @@ export function CaseInput({
             Reset
           </button>
         </div>
-        <div className="mt-3 border-t border-border/60 py-3 text-center text-[10px] text-muted-foreground/60">
-          Routing is deterministic and policy-governed. Generative AI is not used for final clinical decisions.
-        </div>
       </div>
     </div>
   );
