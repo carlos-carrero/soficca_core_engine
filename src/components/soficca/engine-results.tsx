@@ -622,20 +622,24 @@ function getCuratedDecisiveInputs(report: CardioReport): string[] {
   const state = Object.fromEntries(Object.entries(evidence).map(([key, value]) => [key, value?.value]));
   const facts: string[] = [];
 
+  // 1. Dynamic Anchor
   if (typeof state.chest_pain_present === 'boolean') {
     facts.push(`Chest pain: ${state.chest_pain_present ? 'Present' : 'Absent'}`);
   }
-  if (typeof state.pain_severity === 'string' && state.pain_severity) {
-    facts.push(`Pain severity: ${state.pain_severity}`);
-  }
-  if (typeof state.pain_radiation === 'string' && state.pain_radiation) {
-    facts.push(`Radiation: ${state.pain_radiation.replace(/_/g, ' ')}`);
-  }
-  if (typeof state.exertional_chest_pain === 'boolean' && state.exertional_chest_pain) {
-    facts.push('Exertional chest pain reported');
-  }
-  if (typeof state.syncope === 'boolean' && state.syncope) {
-    facts.push('Syncope present');
+
+  // 2. Dynamic Missing Fields (Reads exactly what the engine says is missing)
+  if (report.decision.status === 'NEEDS_MORE_INFO' && Array.isArray(report.decision.missing_fields)) {
+    const missingToDisplay = report.decision.missing_fields.slice(0, 3);
+    missingToDisplay.forEach((field) => {
+      const formatted = field.split('_').join(' ');
+      const capitalized = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      facts.push(`${capitalized} unconfirmed`);
+    });
+  } else {
+    // 3. Dynamic Present Fields (For Decided/Escalated states)
+    if (state.pain_severity) facts.push(`Severity: ${state.pain_severity}`);
+    if (state.pain_radiation) facts.push(`Radiation: ${String(state.pain_radiation).replace(/_/g, ' ')}`);
+    if (state.pain_duration_minutes) facts.push(`Duration: ${state.pain_duration_minutes} min`);
   }
   if (typeof state.pain_duration_minutes === 'number') {
     facts.push(`Pain duration: ${state.pain_duration_minutes} minutes`);
@@ -650,7 +654,11 @@ function getCuratedDecisiveInputs(report: CardioReport): string[] {
     facts.push('Safety policy checks completed');
   }
 
-  return facts.slice(0, 4);
+  // 4. Crucial Flags
+  if (state.syncope) facts.push('Syncope present');
+  if (state.exertional_chest_pain) facts.push('Exertional history reported');
+
+  return facts.slice(0, 4); // Guarantees a robust 3-4 items without overcrowding
 }
 
 function getDecisiveInputs(report: CardioReport): string[] {
