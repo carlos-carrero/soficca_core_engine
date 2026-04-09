@@ -6,7 +6,7 @@ type RouteRequestBody = {
   payload?: CardioPayload;
 };
 
-const BACKEND_URL = 'http://127.0.0.1:8000/v1/cardio/report';
+const BACKEND_URL = 'https://soficca-core-engine.onrender.com/v1/cardio/report';
 
 function extractPayload(body: unknown): { payload: CardioPayload | null } {
   if (!body || typeof body !== 'object') {
