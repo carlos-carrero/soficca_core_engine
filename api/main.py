@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,6 +27,7 @@ from cardio_triage_v1.schema import CardioReport
 from cardio_triage_v1.validation import evaluate_readiness as evaluate_cardio_report
 from soficca_core.engine import evaluate as evaluate_decision
 
+from api.routers.dermatology_router import router as dermatology_router
 
 # -----------------------------
 # Contract: Decision Report v0.3 (JSON Schema)
@@ -223,6 +225,13 @@ class CardioReportRequest(BaseModel):
 # App
 # -----------------------------
 app = FastAPI(title="Soficca Core API (Decision-First)", version="0.3.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite que el repo 'pen' se conecte desde cualquier Codespace o localhost
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.mount("/demo/cardio", StaticFiles(directory="ui/cardio-demo", html=True), name="cardio-demo")
 
 
@@ -293,6 +302,7 @@ def v1_cardio_report(payload: CardioReportRequest) -> Dict[str, Any]:
     raw_report = evaluate_cardio_report({"state": payload.state, "context": payload.context})
     return assert_valid_report(raw_report).model_dump(mode="json")
 
+app.include_router(dermatology_router)
 
 if __name__ == "__main__":
     import uvicorn
