@@ -28,6 +28,7 @@ from cardio_triage_v1.validation import evaluate_readiness as evaluate_cardio_re
 from soficca_core.engine import evaluate as evaluate_decision
 
 from api.routers.dermatology_router import router as dermatology_router
+from api.routers.pen_router import router as pen_router
 
 # -----------------------------
 # Contract: Decision Report v0.3 (JSON Schema)
@@ -303,6 +304,7 @@ def v1_cardio_report(payload: CardioReportRequest) -> Dict[str, Any]:
     return assert_valid_report(raw_report).model_dump(mode="json")
 
 app.include_router(dermatology_router)
+app.include_router(pen_router)
 
 if __name__ == "__main__":
     import uvicorn
