@@ -13,6 +13,9 @@ class DecisionStatus(str, Enum):
 
 class DecisionPath(str, Enum):
     TOPICAL_TREATMENT = "topical_treatment"
+    TOPICAL_TREATMENT_WITH_SUPPORT = "topical_treatment_with_support"
+    NEEDS_MORE_INFORMATION = "needs_more_information"
+    MANUAL_REVIEW = "manual_review"
     ORAL_TREATMENT = "oral_treatment"
 
 
@@ -127,6 +130,15 @@ class PenJourneyViews(BaseModel):
     month_6: JourneyView
 
 
+class DecisionRationale(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    primary_reason: str
+    supporting_reasons: List[str]
+    safety_summary: Optional[str]
+    why_not_selected: List[str]
+
+
 class FrontendEvaluationAdapter(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -157,6 +169,7 @@ class PenEvaluationResponse(BaseModel):
 
     versions: PenVersions
     decision: PenDecision
+    decision_rationale: DecisionRationale
     trace: PenTrace
     journey_views: PenJourneyViews
     frontend_adapter: FrontendAdapter

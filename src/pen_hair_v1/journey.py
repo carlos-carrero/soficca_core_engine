@@ -1,9 +1,27 @@
 from __future__ import annotations
 
+from pen_hair_v1.constants import (
+    DECISION_PATH_MANUAL_REVIEW,
+    DECISION_PATH_NEEDS_MORE_INFORMATION,
+    DECISION_PATH_TOPICAL_TREATMENT_WITH_SUPPORT,
+)
 from pen_hair_v1.schema import JourneySection, JourneyView, PenJourneyViews
 
 
 def _build_view(state_label: str, decision_title: str, decision_path: str) -> JourneyView:
+    recommendation_body = "Continue topical protocol and monitor tolerance/progress at this milestone."
+    narrative_body = f"Deterministic follow-up state for path '{decision_path}'."
+
+    if decision_path == DECISION_PATH_TOPICAL_TREATMENT_WITH_SUPPORT:
+        recommendation_body = "Continue topical plan with adherence/comfort support and close check-ins."
+        narrative_body = "Topical pathway selected with additional support for tolerance and consistency."
+    elif decision_path == DECISION_PATH_MANUAL_REVIEW:
+        recommendation_body = "Pause auto-plan activation and complete clinician manual review before proceeding."
+        narrative_body = "Case requires manual review; journey milestones track review and safe next-step alignment."
+    elif decision_path == DECISION_PATH_NEEDS_MORE_INFORMATION:
+        recommendation_body = "Collect missing preference/consistency details before treatment activation."
+        narrative_body = "Decision deferred pending critical missing information."
+
     return JourneyView(
         hero=JourneySection(
             heading=state_label,
@@ -16,11 +34,11 @@ def _build_view(state_label: str, decision_title: str, decision_path: str) -> Jo
         },
         narrative=JourneySection(
             heading="Clinical narrative",
-            body=f"Deterministic follow-up state for path '{decision_path}'.",
+            body=narrative_body,
         ),
         recommendation=JourneySection(
             heading="Current recommendation",
-            body="Continue topical protocol and monitor tolerance/progress at this milestone.",
+            body=recommendation_body,
         ),
         decision_trace_badge="Deterministic safety-first decision",
     )

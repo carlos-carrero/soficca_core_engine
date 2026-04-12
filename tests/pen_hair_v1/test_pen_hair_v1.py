@@ -10,6 +10,7 @@ from pen_hair_v1.examples import canonical_hypertension_response_example
 from pen_hair_v1.request_adapter import map_frontend_intake_to_request
 from pen_hair_v1.schema import PenIntakeRequest
 from pen_hair_v1.service import evaluate_pen_intake
+from tests.pen_hair_v1.golden_cases import get_pen_golden_cases
 
 
 def _valid_payload() -> dict:
@@ -51,13 +52,70 @@ def test_hypertension_excludes_oral_and_selects_topical_path() -> None:
     assert response.decision.decision_path.value == "topical_treatment"
     assert [option.value for option in response.decision.excluded_options] == ["oral_treatment"]
     assert "HIGH_BLOOD_PRESSURE" in response.decision.flags
+    assert "high blood pressure" in response.decision.explanation.lower()
+
+
+def test_cardiovascular_conditions_route_to_manual_review() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = ["arrhythmia"]
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "manual_review"
+    assert "CARDIOVASCULAR_CONDITION" in response.decision.flags
+    assert [option.value for option in response.decision.excluded_options] == ["oral_treatment"]
+
+
+def test_prior_treatment_side_effects_route_to_manual_review() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = []
+    payload["prior_treatment_use"] = True
+    payload["had_side_effects"] = True
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "manual_review"
+    assert "PRIOR_SIDE_EFFECTS" in response.decision.flags
+
+
+def test_unknown_critical_inputs_route_to_needs_more_information() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = []
+    payload["treatment_preference"] = "unknown"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.status.value == "NEEDS_MORE_INFO"
+    assert response.decision.decision_path.value == "needs_more_information"
+
+
+def test_support_path_branch_for_scalp_sensitivity() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = []
+    payload["scalp_sensitivities"] = True
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "topical_treatment_with_support"
+    assert "SCALP_SENSITIVITY" in response.decision.flags
 
 
 def test_response_contract_shape() -> None:
     request = PenIntakeRequest.model_validate(_valid_payload())
     response = evaluate_pen_intake(request).model_dump(mode="python")
 
-    assert set(response.keys()) == {"versions", "decision", "trace", "journey_views", "frontend_adapter"}
+    assert set(response.keys()) == {
+        "versions",
+        "decision",
+        "decision_rationale",
+        "trace",
+        "journey_views",
+        "frontend_adapter",
+    }
     assert set(response["decision"].keys()) == {
         "status",
         "decision_path",
@@ -68,6 +126,12 @@ def test_response_contract_shape() -> None:
     }
 
     assert set(response["frontend_adapter"].keys()) == {"evaluation", "journey"}
+    assert set(response["decision_rationale"].keys()) == {
+        "primary_reason",
+        "supporting_reasons",
+        "safety_summary",
+        "why_not_selected",
+    }
 
 
 def test_journey_views_include_all_expected_states() -> None:
@@ -95,6 +159,14 @@ def test_frontend_adapter_mirrors_canonical_sections() -> None:
     assert response.frontend_adapter.evaluation.decision_path == response.decision.decision_path
     assert response.frontend_adapter.evaluation.trace_evidence == response.trace.trace_evidence
     assert response.frontend_adapter.journey.model_dump(mode="python") == response.journey_views.model_dump(mode="python")
+    assert set(response.model_dump(mode="python").keys()) == {
+        "versions",
+        "decision",
+        "decision_rationale",
+        "trace",
+        "journey_views",
+        "frontend_adapter",
+    }
 
 
 def test_frontend_intake_mapper_supports_camel_case() -> None:
@@ -144,8 +216,32 @@ def test_canonical_example_includes_frontend_adapter() -> None:
     data = canonical_hypertension_response_example()
     assert data["decision"]["decision_path"] == "topical_treatment"
     assert data["decision"]["excluded_options"] == ["oral_treatment"]
+    assert "decision_rationale" in data
     assert "frontend_adapter" in data
     assert data["frontend_adapter"]["evaluation"]["decision_path"] == "topical_treatment"
+
+
+@pytest.mark.parametrize("case", get_pen_golden_cases(), ids=lambda case: case["name"])
+def test_pen_golden_cases(case: dict) -> None:
+    request = PenIntakeRequest.model_validate(case["payload"])
+    response = evaluate_pen_intake(request).model_dump(mode="python")
+
+    assert response["decision"]["decision_path"] == case["decision_path"]
+    assert response["decision"]["status"] == case["status"]
+    for flag in case["expected_flags"]:
+        assert flag in response["decision"]["flags"]
+    assert response["decision"]["excluded_options"] == case["expected_excluded_options"]
+    assert case["rationale_primary_contains"] in response["decision_rationale"]["primary_reason"].lower()
+    assert set(response["journey_views"].keys()) == {"month_0", "week_6", "month_3", "month_6"}
+    assert set(response["frontend_adapter"]["journey"].keys()) == {"month_0", "week_6", "month_3", "month_6"}
+    assert set(response.keys()) == {
+        "versions",
+        "decision",
+        "decision_rationale",
+        "trace",
+        "journey_views",
+        "frontend_adapter",
+    }
 
 
 def test_pen_router_endpoints_available_from_main() -> None:
