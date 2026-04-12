@@ -232,6 +232,12 @@ def test_pen_golden_cases(case: dict) -> None:
         assert flag in response["decision"]["flags"]
     assert response["decision"]["excluded_options"] == case["expected_excluded_options"]
     assert case["rationale_primary_contains"] in response["decision_rationale"]["primary_reason"].lower()
+    safety_summary = response["decision_rationale"]["safety_summary"]
+    if case["rationale_safety_contains"] is None:
+        assert safety_summary is None
+    else:
+        assert safety_summary is not None
+        assert case["rationale_safety_contains"] in safety_summary.lower()
     assert set(response["journey_views"].keys()) == {"month_0", "week_6", "month_3", "month_6"}
     assert set(response["frontend_adapter"]["journey"].keys()) == {"month_0", "week_6", "month_3", "month_6"}
     assert set(response.keys()) == {

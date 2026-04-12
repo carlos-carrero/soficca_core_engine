@@ -61,6 +61,7 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_flags": ["HIGH_BLOOD_PRESSURE"],
             "expected_excluded_options": ["oral_treatment"],
             "rationale_primary_contains": "safest deterministic starting path",
+            "rationale_safety_contains": "high blood pressure",
         },
         {
             "name": "cardiovascular_manual_review_case",
@@ -70,6 +71,7 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_flags": ["CARDIOVASCULAR_CONDITION"],
             "expected_excluded_options": ["oral_treatment"],
             "rationale_primary_contains": "not appropriate",
+            "rationale_safety_contains": "deterministic safety posture",
         },
         {
             "name": "prior_treatment_side_effects_case",
@@ -79,6 +81,7 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_flags": ["PRIOR_SIDE_EFFECTS"],
             "expected_excluded_options": [],
             "rationale_primary_contains": "not appropriate",
+            "rationale_safety_contains": "SAFETY flags present".lower(),
         },
         {
             "name": "missing_information_case",
@@ -88,6 +91,7 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_flags": [],
             "expected_excluded_options": [],
             "rationale_primary_contains": "not enough information",
+            "rationale_safety_contains": None,
         },
         {
             "name": "support_path_case",
@@ -97,5 +101,6 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_flags": ["SCALP_SENSITIVITY"],
             "expected_excluded_options": [],
             "rationale_primary_contains": "additional support",
+            "rationale_safety_contains": "SAFETY flags present".lower(),
         },
     ]
