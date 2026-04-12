@@ -19,7 +19,6 @@ from pen_hair_v1.schema import PenNormalizedIntake
 _UNKNOWN_VALUES: Set[str] = {"unknown", "unsure", "not_sure", "n/a", "na", "prefer_not_to_say"}
 _LOW_CONSISTENCY_VALUES: Set[str] = {"low", "inconsistent", "variable"}
 _COMFORT_PRIORITY_VALUES: Set[str] = {"comfort", "tolerance", "minimize_side_effects", "side_effects"}
-_NON_HYPERTENSION_CARDIO: Set[str] = {"cad", "arrhythmia", "heart_failure", "stroke_history", "vascular_disease"}
 
 
 def _has_critical_unknowns(intake: PenNormalizedIntake) -> bool:
@@ -45,10 +44,7 @@ def select_decision_path(intake: PenNormalizedIntake, safety: Dict[str, List[str
             "excluded_options": excluded_options,
         }
 
-    cardio_conditions = {item.lower() for item in intake.cardiovascular_conditions}
-    has_non_hypertension_cardio = bool(cardio_conditions.intersection(_NON_HYPERTENSION_CARDIO))
-
-    if has_non_hypertension_cardio:
+    if intake.cardiovascular_conditions:
         return {
             "decision_path": DECISION_PATH_MANUAL_REVIEW,
             "title": "Manual clinical review required",

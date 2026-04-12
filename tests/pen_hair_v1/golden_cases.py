@@ -11,11 +11,11 @@ def _base_payload() -> Dict[str, Any]:
         "loss_areas": ["temples", "crown"],
         "main_goal": "regrowth",
         "high_blood_pressure": True,
-        "cardiovascular_conditions": ["hypertension"],
+        "cardiovascular_conditions": False,
         "current_medication": True,
         "medication_detail": "amlodipine",
         "prior_treatment_use": False,
-        "which_treatment": [],
+        "which_treatment": "",
         "had_side_effects": False,
         "side_effect_detail": None,
         "scalp_sensitivities": False,
@@ -30,24 +30,24 @@ def _base_payload() -> Dict[str, Any]:
 def get_pen_golden_cases() -> List[Dict[str, Any]]:
     base = _base_payload()
 
-    cardiovascular_case = {**base, "high_blood_pressure": False, "cardiovascular_conditions": ["arrhythmia"]}
+    cardiovascular_case = {**base, "high_blood_pressure": False, "cardiovascular_conditions": True}
     side_effect_case = {
         **base,
         "high_blood_pressure": False,
-        "cardiovascular_conditions": [],
+        "cardiovascular_conditions": False,
         "prior_treatment_use": True,
         "had_side_effects": True,
     }
     missing_info_case = {
         **base,
         "high_blood_pressure": False,
-        "cardiovascular_conditions": [],
+        "cardiovascular_conditions": False,
         "treatment_preference": "unknown",
     }
     support_case = {
         **base,
         "high_blood_pressure": False,
-        "cardiovascular_conditions": [],
+        "cardiovascular_conditions": False,
         "scalp_sensitivities": True,
         "routine_consistency": "low",
     }

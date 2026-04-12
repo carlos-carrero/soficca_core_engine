@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class DecisionStatus(str, Enum):
@@ -36,11 +36,11 @@ class PenIntakeRequest(BaseModel):
     loss_areas: List[str] = Field(default_factory=list)
     main_goal: str = Field(min_length=1)
     high_blood_pressure: bool
-    cardiovascular_conditions: List[str] = Field(default_factory=list)
+    cardiovascular_conditions: bool
     current_medication: bool
     medication_detail: Optional[str] = None
     prior_treatment_use: bool
-    which_treatment: List[str] = Field(default_factory=list)
+    which_treatment: Optional[str] = None
     had_side_effects: bool
     side_effect_detail: Optional[str] = None
     scalp_sensitivities: bool
@@ -49,6 +49,28 @@ class PenIntakeRequest(BaseModel):
     routine_consistency: str = Field(min_length=1)
     priority_factor: str = Field(min_length=1)
     baseline_photos_uploaded: bool
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_legacy_transport_fields(cls, data: Any) -> Any:
+        """Backwards-conscious coercion for legacy array-style request payloads."""
+        if not isinstance(data, dict):
+            return data
+
+        payload = dict(data)
+
+        cardio_value = payload.get("cardiovascular_conditions")
+        if isinstance(cardio_value, list):
+            payload["cardiovascular_conditions"] = len([item for item in cardio_value if str(item).strip()]) > 0
+
+        which_treatment_value = payload.get("which_treatment")
+        if isinstance(which_treatment_value, list):
+            first_non_empty = next((str(item).strip() for item in which_treatment_value if str(item).strip()), "")
+            payload["which_treatment"] = first_non_empty or None
+        elif isinstance(which_treatment_value, str) and which_treatment_value.strip() == "":
+            payload["which_treatment"] = None
+
+        return payload
 
 
 class PenNormalizedIntake(BaseModel):
@@ -60,11 +82,11 @@ class PenNormalizedIntake(BaseModel):
     loss_areas: List[str]
     main_goal: str
     high_blood_pressure: bool
-    cardiovascular_conditions: List[str]
+    cardiovascular_conditions: bool
     current_medication: bool
     medication_detail: Optional[str]
     prior_treatment_use: bool
-    which_treatment: List[str]
+    which_treatment: Optional[str]
     had_side_effects: bool
     side_effect_detail: Optional[str]
     scalp_sensitivities: bool

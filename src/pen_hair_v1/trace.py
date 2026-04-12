@@ -24,14 +24,13 @@ def build_trace_evidence(intake: PenNormalizedIntake) -> List[TraceEvidence]:
         )
     ]
 
-    if intake.cardiovascular_conditions:
-        evidence.append(
-            TraceEvidence(
-                field="cardiovascular_conditions",
-                value=", ".join(intake.cardiovascular_conditions),
-                reason="Explicit comorbidity list; no inferred additions.",
-            )
+    evidence.append(
+        TraceEvidence(
+            field="cardiovascular_conditions",
+            value="true" if intake.cardiovascular_conditions else "false",
+            reason="Explicit yes/no cardiovascular risk signal from intake payload.",
         )
+    )
     evidence.append(
         TraceEvidence(
             field="prior_treatment_use",

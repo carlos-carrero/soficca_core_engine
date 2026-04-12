@@ -21,11 +21,11 @@ def _valid_payload() -> dict:
         "loss_areas": ["temples", "crown"],
         "main_goal": "regrowth",
         "high_blood_pressure": True,
-        "cardiovascular_conditions": ["hypertension"],
+        "cardiovascular_conditions": False,
         "current_medication": True,
         "medication_detail": "amlodipine",
         "prior_treatment_use": False,
-        "which_treatment": [],
+        "which_treatment": "",
         "had_side_effects": False,
         "side_effect_detail": None,
         "scalp_sensitivities": False,
@@ -45,6 +45,26 @@ def test_request_validation_rejects_underage() -> None:
         PenIntakeRequest.model_validate(payload)
 
 
+def test_frontend_style_boolean_and_string_fields_validate() -> None:
+    payload = _valid_payload()
+    payload["cardiovascular_conditions"] = False
+    payload["which_treatment"] = ""
+
+    validated = PenIntakeRequest.model_validate(payload)
+    assert validated.cardiovascular_conditions is False
+    assert validated.which_treatment is None
+
+
+def test_legacy_list_style_fields_are_backwards_coerced() -> None:
+    payload = _valid_payload()
+    payload["cardiovascular_conditions"] = ["hypertension"]
+    payload["which_treatment"] = ["topical", "oral"]
+
+    validated = PenIntakeRequest.model_validate(payload)
+    assert validated.cardiovascular_conditions is True
+    assert validated.which_treatment == "topical"
+
+
 def test_hypertension_excludes_oral_and_selects_topical_path() -> None:
     request = PenIntakeRequest.model_validate(_valid_payload())
     response = evaluate_pen_intake(request)
@@ -58,7 +78,7 @@ def test_hypertension_excludes_oral_and_selects_topical_path() -> None:
 def test_cardiovascular_conditions_route_to_manual_review() -> None:
     payload = _valid_payload()
     payload["high_blood_pressure"] = False
-    payload["cardiovascular_conditions"] = ["arrhythmia"]
+    payload["cardiovascular_conditions"] = True
     request = PenIntakeRequest.model_validate(payload)
     response = evaluate_pen_intake(request)
 
@@ -70,7 +90,7 @@ def test_cardiovascular_conditions_route_to_manual_review() -> None:
 def test_prior_treatment_side_effects_route_to_manual_review() -> None:
     payload = _valid_payload()
     payload["high_blood_pressure"] = False
-    payload["cardiovascular_conditions"] = []
+    payload["cardiovascular_conditions"] = False
     payload["prior_treatment_use"] = True
     payload["had_side_effects"] = True
     request = PenIntakeRequest.model_validate(payload)
@@ -83,7 +103,7 @@ def test_prior_treatment_side_effects_route_to_manual_review() -> None:
 def test_unknown_critical_inputs_route_to_needs_more_information() -> None:
     payload = _valid_payload()
     payload["high_blood_pressure"] = False
-    payload["cardiovascular_conditions"] = []
+    payload["cardiovascular_conditions"] = False
     payload["treatment_preference"] = "unknown"
     request = PenIntakeRequest.model_validate(payload)
     response = evaluate_pen_intake(request)
@@ -95,7 +115,7 @@ def test_unknown_critical_inputs_route_to_needs_more_information() -> None:
 def test_support_path_branch_for_scalp_sensitivity() -> None:
     payload = _valid_payload()
     payload["high_blood_pressure"] = False
-    payload["cardiovascular_conditions"] = []
+    payload["cardiovascular_conditions"] = False
     payload["scalp_sensitivities"] = True
     request = PenIntakeRequest.model_validate(payload)
     response = evaluate_pen_intake(request)
@@ -178,11 +198,11 @@ def test_frontend_intake_mapper_supports_camel_case() -> None:
             "lossAreas": ["temples", "crown"],
             "mainGoal": "regrowth",
             "highBloodPressure": True,
-            "cardiovascularConditions": ["hypertension"],
+            "cardiovascularConditions": False,
             "currentMedication": True,
             "medicationDetail": "amlodipine",
             "priorTreatmentUse": False,
-            "whichTreatment": [],
+            "whichTreatment": "",
             "hadSideEffects": False,
             "sideEffectDetail": None,
             "scalpSensitivities": False,
