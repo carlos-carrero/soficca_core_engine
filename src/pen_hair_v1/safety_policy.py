@@ -5,6 +5,7 @@ from typing import Dict, List
 from pen_hair_v1.constants import (
     EXCLUDED_OPTION_ORAL_TREATMENT,
     RULE_CARDIO_COMORBIDITY_MANUAL_REVIEW,
+    RULE_EXCLUDE_ORAL_FOR_HYPERTENSION,
     SAFETY_FLAG_HIGH_BLOOD_PRESSURE,
     SAFETY_FLAG_CARDIOVASCULAR_CONDITION,
     SAFETY_FLAG_PRIOR_SIDE_EFFECTS,
@@ -23,6 +24,7 @@ def evaluate_safety(intake: PenNormalizedIntake) -> Dict[str, List[str]]:
         excluded_options.append(EXCLUDED_OPTION_ORAL_TREATMENT)
         flags.append(SAFETY_FLAG_HIGH_BLOOD_PRESSURE)
         safety_reasons.append("High blood pressure present; oral treatment is excluded.")
+        safety_rules_triggered.append(RULE_EXCLUDE_ORAL_FOR_HYPERTENSION)
 
     if intake.cardiovascular_conditions:
         if EXCLUDED_OPTION_ORAL_TREATMENT not in excluded_options:

@@ -16,7 +16,17 @@ from pen_hair_v1.constants import (
 )
 from pen_hair_v1.schema import PenNormalizedIntake
 
-_UNKNOWN_VALUES: Set[str] = {"unknown", "unsure", "not_sure", "n/a", "na", "prefer_not_to_say"}
+_UNKNOWN_VALUES: Set[str] = {
+    "",
+    "unknown",
+    "unsure",
+    "not_sure",
+    "not sure",
+    "n/a",
+    "na",
+    "prefer_not_to_say",
+    "prefer not to say",
+}
 _LOW_CONSISTENCY_VALUES: Set[str] = {"low", "inconsistent", "variable"}
 _COMFORT_PRIORITY_VALUES: Set[str] = {"comfort", "tolerance", "minimize_side_effects", "side_effects"}
 
@@ -34,16 +44,6 @@ def select_decision_path(intake: PenNormalizedIntake, safety: Dict[str, List[str
     excluded_options = list(safety.get("excluded_options", []))
     safety_reasons = list(safety.get("safety_reasons", []))
 
-    if _has_critical_unknowns(intake):
-        rules_triggered.append(RULE_NEEDS_MORE_INFORMATION_UNKNOWN_INPUTS)
-        return {
-            "decision_path": DECISION_PATH_NEEDS_MORE_INFORMATION,
-            "title": "More information needed",
-            "explanation": "Decision-critical preference/consistency inputs are unknown; safe automatic selection is deferred.",
-            "rules_triggered": rules_triggered,
-            "excluded_options": excluded_options,
-        }
-
     if intake.cardiovascular_conditions:
         return {
             "decision_path": DECISION_PATH_MANUAL_REVIEW,
@@ -59,6 +59,16 @@ def select_decision_path(intake: PenNormalizedIntake, safety: Dict[str, List[str
             "decision_path": DECISION_PATH_MANUAL_REVIEW,
             "title": "Manual review for prior side effects",
             "explanation": "Prior treatment-related side effects reported; manual review needed for safer next-step planning.",
+            "rules_triggered": rules_triggered,
+            "excluded_options": excluded_options,
+        }
+
+    if _has_critical_unknowns(intake):
+        rules_triggered.append(RULE_NEEDS_MORE_INFORMATION_UNKNOWN_INPUTS)
+        return {
+            "decision_path": DECISION_PATH_NEEDS_MORE_INFORMATION,
+            "title": "More information needed",
+            "explanation": "Decision-critical preference/consistency inputs are unknown; safe automatic selection is deferred.",
             "rules_triggered": rules_triggered,
             "excluded_options": excluded_options,
         }

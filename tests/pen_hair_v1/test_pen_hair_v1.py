@@ -73,6 +73,7 @@ def test_hypertension_excludes_oral_and_selects_topical_path() -> None:
     assert [option.value for option in response.decision.excluded_options] == ["oral_treatment"]
     assert "HIGH_BLOOD_PRESSURE" in response.decision.flags
     assert "high blood pressure" in response.decision.explanation.lower()
+    assert "RULE_EXCLUDE_ORAL_FOR_HYPERTENSION_V1" in response.trace.rules_triggered
 
 
 def test_cardiovascular_conditions_route_to_manual_review() -> None:
@@ -112,6 +113,43 @@ def test_unknown_critical_inputs_route_to_needs_more_information() -> None:
     assert response.decision.decision_path.value == "needs_more_information"
 
 
+def test_manual_review_precedes_missing_info_for_cardiovascular_risk() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = True
+    payload["treatment_preference"] = "unknown"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "manual_review"
+    assert "CARDIOVASCULAR_CONDITION" in response.decision.flags
+
+
+def test_manual_review_precedes_missing_info_for_prior_side_effects() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = False
+    payload["prior_treatment_use"] = True
+    payload["had_side_effects"] = True
+    payload["priority_factor"] = "unknown"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "manual_review"
+    assert "PRIOR_SIDE_EFFECTS" in response.decision.flags
+
+
+def test_blank_critical_inputs_are_treated_as_needs_more_information() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = False
+    payload["routine_consistency"] = "   "
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "needs_more_information"
+
+
 def test_support_path_branch_for_scalp_sensitivity() -> None:
     payload = _valid_payload()
     payload["high_blood_pressure"] = False
@@ -122,6 +160,91 @@ def test_support_path_branch_for_scalp_sensitivity() -> None:
 
     assert response.decision.decision_path.value == "topical_treatment_with_support"
     assert "SCALP_SENSITIVITY" in response.decision.flags
+
+
+def test_not_sure_variant_routes_to_needs_more_information() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = False
+    payload["priority_factor"] = "not sure"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "needs_more_information"
+
+
+@pytest.mark.parametrize(
+    ("name", "mutations", "expected_decision_path"),
+    [
+        ("canonical_hypertension", {}, "topical_treatment"),
+        (
+            "no_hbp_no_cardio_topical_high_consistency",
+            {
+                "high_blood_pressure": False,
+                "cardiovascular_conditions": False,
+                "treatment_preference": "topical",
+                "routine_consistency": "high",
+                "priority_factor": "efficacy",
+            },
+            "topical_treatment",
+        ),
+        (
+            "no_hbp_oral_preference_high_consistency",
+            {
+                "high_blood_pressure": False,
+                "cardiovascular_conditions": False,
+                "treatment_preference": "oral",
+                "routine_consistency": "high",
+                "priority_factor": "efficacy",
+            },
+            "topical_treatment",
+        ),
+        (
+            "cardiovascular_conditions_true",
+            {"high_blood_pressure": False, "cardiovascular_conditions": True},
+            "manual_review",
+        ),
+        (
+            "prior_treatment_side_effects",
+            {
+                "high_blood_pressure": False,
+                "cardiovascular_conditions": False,
+                "prior_treatment_use": True,
+                "had_side_effects": True,
+            },
+            "manual_review",
+        ),
+        (
+            "scalp_sensitivity",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "scalp_sensitivities": True},
+            "topical_treatment_with_support",
+        ),
+        (
+            "low_consistency_support",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "routine_consistency": "low"},
+            "topical_treatment_with_support",
+        ),
+        (
+            "comfort_priority_support",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "priority_factor": "comfort"},
+            "topical_treatment_with_support",
+        ),
+        (
+            "missing_critical_input",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "treatment_preference": "unknown"},
+            "needs_more_information",
+        ),
+    ],
+)
+def test_pen_decision_matrix_regression(name: str, mutations: dict, expected_decision_path: str) -> None:
+    payload = _valid_payload()
+    payload.update(mutations)
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == expected_decision_path
+    assert response.frontend_adapter.evaluation.decision_path.value == expected_decision_path
+    assert response.trace.rules_triggered
 
 
 def test_response_contract_shape() -> None:
