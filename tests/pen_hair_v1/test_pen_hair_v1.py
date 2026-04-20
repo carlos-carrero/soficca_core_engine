@@ -173,6 +173,33 @@ def test_not_sure_variant_routes_to_needs_more_information() -> None:
     assert response.decision.decision_path.value == "needs_more_information"
 
 
+def test_simpler_routine_preference_routes_to_support_path() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = False
+    payload["treatment_preference"] = "simpler_routine"
+    payload["routine_consistency"] = "high"
+    payload["priority_factor"] = "efficacy"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "topical_treatment_with_support"
+    assert "RULE_SUPPORT_PATH_SIMPLER_ROUTINE_PREFERENCE_V1" in response.trace.rules_triggered
+
+
+def test_convenience_priority_routes_to_support_path() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = False
+    payload["priority_factor"] = "convenience"
+    payload["routine_consistency"] = "high"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "topical_treatment_with_support"
+    assert "RULE_SUPPORT_PATH_COMFORT_PRIORITY_V1" in response.trace.rules_triggered
+
+
 @pytest.mark.parametrize(
     ("name", "mutations", "expected_decision_path"),
     [
@@ -227,6 +254,16 @@ def test_not_sure_variant_routes_to_needs_more_information() -> None:
         (
             "comfort_priority_support",
             {"high_blood_pressure": False, "cardiovascular_conditions": False, "priority_factor": "comfort"},
+            "topical_treatment_with_support",
+        ),
+        (
+            "convenience_priority_support",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "priority_factor": "convenience"},
+            "topical_treatment_with_support",
+        ),
+        (
+            "simpler_routine_preference_support",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "treatment_preference": "simpler_routine"},
             "topical_treatment_with_support",
         ),
         (

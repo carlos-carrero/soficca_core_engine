@@ -13,6 +13,7 @@ from pen_hair_v1.constants import (
     RULE_SUPPORT_PATH_COMFORT_PRIORITY,
     RULE_SUPPORT_PATH_LOW_CONSISTENCY,
     RULE_SUPPORT_PATH_SCALP_SENSITIVITY,
+    RULE_SUPPORT_PATH_SIMPLER_ROUTINE_PREFERENCE,
 )
 from pen_hair_v1.schema import PenNormalizedIntake
 
@@ -28,7 +29,23 @@ _UNKNOWN_VALUES: Set[str] = {
     "prefer not to say",
 }
 _LOW_CONSISTENCY_VALUES: Set[str] = {"low", "inconsistent", "variable"}
-_COMFORT_PRIORITY_VALUES: Set[str] = {"comfort", "tolerance", "minimize_side_effects", "side_effects"}
+_COMFORT_PRIORITY_VALUES: Set[str] = {
+    "comfort",
+    "tolerance",
+    "minimize_side_effects",
+    "side_effects",
+    "convenience",
+    "simple",
+    "simplicity",
+    "easy_routine",
+}
+_SIMPLER_ROUTINE_PREFERENCE_VALUES: Set[str] = {
+    "simple",
+    "simplicity",
+    "simpler_routine",
+    "easy_routine",
+    "minimal_steps",
+}
 
 
 def _has_critical_unknowns(intake: PenNormalizedIntake) -> bool:
@@ -85,6 +102,10 @@ def select_decision_path(intake: PenNormalizedIntake, safety: Dict[str, List[str
     if intake.priority_factor in _COMFORT_PRIORITY_VALUES:
         rules_triggered.append(RULE_SUPPORT_PATH_COMFORT_PRIORITY)
         support_reasons.append("comfort-first priority")
+
+    if intake.treatment_preference in _SIMPLER_ROUTINE_PREFERENCE_VALUES:
+        rules_triggered.append(RULE_SUPPORT_PATH_SIMPLER_ROUTINE_PREFERENCE)
+        support_reasons.append("simpler-routine preference")
 
     if support_reasons:
         return {
