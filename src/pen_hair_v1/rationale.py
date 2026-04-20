@@ -75,6 +75,8 @@ def build_decision_rationale(decision: PenDecision, intake: PenNormalizedIntake)
     supporting: List[str] = []
     if intake.treatment_preference == "topical":
         supporting.append("Patient preference aligns with a topical pathway.")
+    if intake.treatment_preference == "oral":
+        supporting.append("Oral preference was captured, but oral treatment is intentionally not auto-selected.")
     if intake.routine_consistency == "high":
         supporting.append("Routine consistency supports reliable topical adherence.")
 

@@ -9,8 +9,8 @@ from pen_hair_v1.schema import JourneySection, JourneyView, PenJourneyViews
 
 
 def _build_view(state_label: str, decision_title: str, decision_path: str) -> JourneyView:
-    recommendation_body = "Continue topical protocol and monitor tolerance/progress at this milestone."
-    narrative_body = f"Deterministic follow-up state for path '{decision_path}'."
+    recommendation_body = f"{decision_title}. Continue topical protocol and monitor tolerance/progress at this milestone."
+    narrative_body = f"Deterministic follow-up state for '{decision_title}'."
 
     if decision_path == DECISION_PATH_TOPICAL_TREATMENT_WITH_SUPPORT:
         recommendation_body = "Continue topical plan with adherence/comfort support and close check-ins."

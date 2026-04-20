@@ -284,6 +284,23 @@ def test_pen_decision_matrix_regression(name: str, mutations: dict, expected_dec
     assert response.trace.rules_triggered
 
 
+def test_oral_preference_is_topical_but_visibly_differentiated() -> None:
+    payload = _valid_payload()
+    payload["high_blood_pressure"] = False
+    payload["cardiovascular_conditions"] = False
+    payload["treatment_preference"] = "oral"
+    payload["routine_consistency"] = "high"
+    payload["priority_factor"] = "efficacy"
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == "topical_treatment"
+    assert "oral preference deferred" in response.decision.title.lower()
+    assert "oral preference was captured" in response.decision.explanation.lower()
+    assert "oral preference was captured" in " ".join(response.decision_rationale.supporting_reasons).lower()
+    assert response.journey_views.month_0.recommendation.body.lower().startswith(response.decision.title.lower())
+
+
 def test_response_contract_shape() -> None:
     request = PenIntakeRequest.model_validate(_valid_payload())
     response = evaluate_pen_intake(request).model_dump(mode="python")

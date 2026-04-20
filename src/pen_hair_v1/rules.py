@@ -119,13 +119,24 @@ def select_decision_path(intake: PenNormalizedIntake, safety: Dict[str, List[str
         }
 
     rules_triggered.append(RULE_DEFAULT_SAFEST_START)
-    explanation = "Topical treatment selected as safest deterministic starting path."
+    title = "Topical first-line start"
+    explanation_parts: List[str] = []
+    if intake.treatment_preference == "oral":
+        title = "Topical first-line start (oral preference deferred)"
+        explanation_parts.append(
+            "Oral preference was captured, but oral treatment is not auto-selected by this deterministic safety-first engine."
+        )
+    elif intake.treatment_preference == "topical":
+        explanation_parts.append("Topical preference aligns with first-line deterministic routing.")
+
+    explanation_parts.append("Topical treatment selected as safest deterministic starting path.")
+    explanation = " ".join(explanation_parts)
     if safety_reasons:
-        explanation = " ".join([*safety_reasons, "Topical treatment selected as safest deterministic starting path."])
+        explanation = " ".join([*safety_reasons, *explanation_parts])
 
     return {
         "decision_path": DECISION_PATH_TOPICAL_TREATMENT,
-        "title": "Topical first-line start",
+        "title": title,
         "explanation": explanation,
         "rules_triggered": rules_triggered,
         "excluded_options": excluded_options,

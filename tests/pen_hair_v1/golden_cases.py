@@ -66,6 +66,14 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
         "routine_consistency": "high",
         "priority_factor": "efficacy",
     }
+    oral_preference_topical_case = {
+        **base,
+        "high_blood_pressure": False,
+        "cardiovascular_conditions": False,
+        "treatment_preference": "oral",
+        "routine_consistency": "high",
+        "priority_factor": "efficacy",
+    }
 
     return [
         {
@@ -136,6 +144,16 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_flags": [],
             "expected_excluded_options": [],
             "rationale_primary_contains": "additional support",
+            "rationale_safety_contains": None,
+        },
+        {
+            "name": "oral_preference_still_topical_case",
+            "payload": oral_preference_topical_case,
+            "decision_path": "topical_treatment",
+            "status": "DECIDED",
+            "expected_flags": [],
+            "expected_excluded_options": [],
+            "rationale_primary_contains": "safest deterministic starting path",
             "rationale_safety_contains": None,
         },
     ]
