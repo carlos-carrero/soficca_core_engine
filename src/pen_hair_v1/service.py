@@ -55,6 +55,8 @@ def evaluate_pen_intake(payload: PenIntakeRequest) -> PenEvaluationResponse:
     journey_views = build_journey_views(
         decision_title=decision.title,
         decision_path=decision.decision_path.value,
+        rules_triggered=selected["rules_triggered"],
+        flags=decision.flags,
     )
 
     response = PenEvaluationResponse(

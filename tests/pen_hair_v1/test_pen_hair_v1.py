@@ -298,7 +298,7 @@ def test_oral_preference_is_topical_but_visibly_differentiated() -> None:
     assert "oral preference deferred" in response.decision.title.lower()
     assert "oral preference was captured" in response.decision.explanation.lower()
     assert "oral preference was captured" in " ".join(response.decision_rationale.supporting_reasons).lower()
-    assert response.journey_views.month_0.recommendation.body.lower().startswith(response.decision.title.lower())
+    assert "oral-preference deferral signal" in response.journey_views.month_0.decision_trace_badge
 
 
 def test_response_contract_shape() -> None:
@@ -347,6 +347,101 @@ def test_journey_views_include_all_expected_states() -> None:
         "month_3",
         "month_6",
     }
+
+
+@pytest.mark.parametrize(
+    ("name", "mutations", "expected_decision_path"),
+    [
+        ("topical_hypertension", {"high_blood_pressure": True, "cardiovascular_conditions": False}, "topical_treatment"),
+        ("support_low_consistency", {"high_blood_pressure": False, "cardiovascular_conditions": False, "routine_consistency": "low"}, "topical_treatment_with_support"),
+        ("manual_cardio", {"high_blood_pressure": False, "cardiovascular_conditions": True}, "manual_review"),
+        ("needs_info_unknown", {"high_blood_pressure": False, "cardiovascular_conditions": False, "treatment_preference": "unknown"}, "needs_more_information"),
+    ],
+)
+def test_journey_stage_text_is_temporally_distinct(name: str, mutations: dict, expected_decision_path: str) -> None:
+    payload = _valid_payload()
+    payload.update(mutations)
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    assert response.decision.decision_path.value == expected_decision_path
+    recommendations = [
+        response.journey_views.month_0.recommendation.body,
+        response.journey_views.week_6.recommendation.body,
+        response.journey_views.month_3.recommendation.body,
+        response.journey_views.month_6.recommendation.body,
+    ]
+    narratives = [
+        response.journey_views.month_0.narrative.body,
+        response.journey_views.week_6.narrative.body,
+        response.journey_views.month_3.narrative.body,
+        response.journey_views.month_6.narrative.body,
+    ]
+    assert len(set(recommendations)) == 4
+    assert len(set(narratives)) == 4
+
+
+@pytest.mark.parametrize(
+    ("name", "mutations", "expected_badge_contains"),
+    [
+        (
+            "topical_hypertension",
+            {"high_blood_pressure": True, "cardiovascular_conditions": False, "treatment_preference": "balanced"},
+            "blood-pressure oral-exclusion safety signal",
+        ),
+        (
+            "topical_oral_preference_deferred",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "treatment_preference": "oral"},
+            "oral-preference deferral signal",
+        ),
+        (
+            "support_low_consistency",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "routine_consistency": "low"},
+            "routine-consistency support signal",
+        ),
+        (
+            "support_scalp",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "scalp_sensitivities": True},
+            "scalp-sensitivity support signal",
+        ),
+        (
+            "manual_cardio",
+            {"high_blood_pressure": False, "cardiovascular_conditions": True},
+            "cardiovascular risk signal",
+        ),
+        (
+            "manual_prior_side_effects",
+            {
+                "high_blood_pressure": False,
+                "cardiovascular_conditions": False,
+                "prior_treatment_use": True,
+                "had_side_effects": True,
+            },
+            "prior treatment side-effect signal",
+        ),
+        (
+            "needs_info_unknown",
+            {"high_blood_pressure": False, "cardiovascular_conditions": False, "treatment_preference": "unknown"},
+            "missing critical preference/consistency inputs",
+        ),
+    ],
+)
+def test_journey_stage_badge_carries_stage_trace_driver(name: str, mutations: dict, expected_badge_contains: str) -> None:
+    payload = _valid_payload()
+    payload.update(mutations)
+    request = PenIntakeRequest.model_validate(payload)
+    response = evaluate_pen_intake(request)
+
+    month_0_badge = response.journey_views.month_0.decision_trace_badge
+    week_6_badge = response.journey_views.week_6.decision_trace_badge
+    month_3_badge = response.journey_views.month_3.decision_trace_badge
+    month_6_badge = response.journey_views.month_6.decision_trace_badge
+
+    assert expected_badge_contains in month_0_badge
+    assert "month_0 trace:" in month_0_badge
+    assert "week_6 trace:" in week_6_badge
+    assert "month_3 trace:" in month_3_badge
+    assert "month_6 trace:" in month_6_badge
 
 
 def test_frontend_adapter_mirrors_canonical_sections() -> None:
