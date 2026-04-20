@@ -58,6 +58,10 @@ def build_decision_rationale(decision: PenDecision, intake: PenNormalizedIntake)
             support_reasons.append("Routine consistency indicates adherence support is needed.")
         if intake.priority_factor in {"comfort", "tolerance", "minimize_side_effects", "side_effects"}:
             support_reasons.append("Priority factor emphasizes comfort/tolerability.")
+        if intake.priority_factor in {"convenience", "simple", "simplicity", "easy_routine"}:
+            support_reasons.append("Priority factor emphasizes convenience/simplicity.")
+        if intake.treatment_preference in {"simple", "simplicity", "simpler_routine", "easy_routine", "minimal_steps"}:
+            support_reasons.append("Treatment preference asks for a simpler routine with onboarding support.")
 
         return DecisionRationale(
             primary_reason="Topical treatment is appropriate with additional support framing.",
@@ -71,6 +75,8 @@ def build_decision_rationale(decision: PenDecision, intake: PenNormalizedIntake)
     supporting: List[str] = []
     if intake.treatment_preference == "topical":
         supporting.append("Patient preference aligns with a topical pathway.")
+    if intake.treatment_preference == "oral":
+        supporting.append("Oral preference was captured, but oral treatment is intentionally not auto-selected.")
     if intake.routine_consistency == "high":
         supporting.append("Routine consistency supports reliable topical adherence.")
 

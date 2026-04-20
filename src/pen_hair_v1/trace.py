@@ -11,6 +11,7 @@ from pen_hair_v1.constants import (
     RULE_SUPPORT_PATH_COMFORT_PRIORITY,
     RULE_SUPPORT_PATH_LOW_CONSISTENCY,
     RULE_SUPPORT_PATH_SCALP_SENSITIVITY,
+    RULE_SUPPORT_PATH_SIMPLER_ROUTINE_PREFERENCE,
 )
 from pen_hair_v1.schema import PenNormalizedIntake, TraceEvidence
 
@@ -70,7 +71,7 @@ def build_trace_evidence(intake: PenNormalizedIntake) -> List[TraceEvidence]:
         TraceEvidence(
             field="treatment_preference",
             value=intake.treatment_preference,
-            reason="Used for missing-info guardrail branching.",
+            reason="Used for missing-info guardrail branching and simpler-routine support branching.",
         )
     )
 
@@ -85,6 +86,7 @@ def rules_evaluated() -> List[str]:
         RULE_SUPPORT_PATH_SCALP_SENSITIVITY,
         RULE_SUPPORT_PATH_LOW_CONSISTENCY,
         RULE_SUPPORT_PATH_COMFORT_PRIORITY,
+        RULE_SUPPORT_PATH_SIMPLER_ROUTINE_PREFERENCE,
         RULE_NEEDS_MORE_INFORMATION_UNKNOWN_INPUTS,
         RULE_DEFAULT_SAFEST_START,
     ]
