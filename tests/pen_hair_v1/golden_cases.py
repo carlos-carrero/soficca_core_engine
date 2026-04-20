@@ -51,6 +51,29 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
         "scalp_sensitivities": True,
         "routine_consistency": "low",
     }
+    convenience_support_case = {
+        **base,
+        "high_blood_pressure": False,
+        "cardiovascular_conditions": False,
+        "priority_factor": "convenience",
+        "routine_consistency": "high",
+    }
+    simpler_routine_preference_case = {
+        **base,
+        "high_blood_pressure": False,
+        "cardiovascular_conditions": False,
+        "treatment_preference": "simpler_routine",
+        "routine_consistency": "high",
+        "priority_factor": "efficacy",
+    }
+    oral_preference_topical_case = {
+        **base,
+        "high_blood_pressure": False,
+        "cardiovascular_conditions": False,
+        "treatment_preference": "oral",
+        "routine_consistency": "high",
+        "priority_factor": "efficacy",
+    }
 
     return [
         {
@@ -102,5 +125,35 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "expected_excluded_options": [],
             "rationale_primary_contains": "additional support",
             "rationale_safety_contains": "SAFETY flags present".lower(),
+        },
+        {
+            "name": "convenience_priority_support_case",
+            "payload": convenience_support_case,
+            "decision_path": "topical_treatment_with_support",
+            "status": "DECIDED",
+            "expected_flags": [],
+            "expected_excluded_options": [],
+            "rationale_primary_contains": "additional support",
+            "rationale_safety_contains": None,
+        },
+        {
+            "name": "simpler_routine_preference_support_case",
+            "payload": simpler_routine_preference_case,
+            "decision_path": "topical_treatment_with_support",
+            "status": "DECIDED",
+            "expected_flags": [],
+            "expected_excluded_options": [],
+            "rationale_primary_contains": "additional support",
+            "rationale_safety_contains": None,
+        },
+        {
+            "name": "oral_preference_still_topical_case",
+            "payload": oral_preference_topical_case,
+            "decision_path": "topical_treatment",
+            "status": "DECIDED",
+            "expected_flags": [],
+            "expected_excluded_options": [],
+            "rationale_primary_contains": "safest deterministic starting path",
+            "rationale_safety_contains": None,
         },
     ]
