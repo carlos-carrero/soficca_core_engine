@@ -224,7 +224,7 @@ def test_convenience_priority_routes_to_support_path() -> None:
                 "routine_consistency": "high",
                 "priority_factor": "efficacy",
             },
-            "topical_treatment",
+            "oral_treatment",
         ),
         (
             "cardiovascular_conditions_true",
@@ -284,7 +284,7 @@ def test_pen_decision_matrix_regression(name: str, mutations: dict, expected_dec
     assert response.trace.rules_triggered
 
 
-def test_oral_preference_is_topical_but_visibly_differentiated() -> None:
+def test_oral_preference_routes_to_oral_without_blockers() -> None:
     payload = _valid_payload()
     payload["high_blood_pressure"] = False
     payload["cardiovascular_conditions"] = False
@@ -294,11 +294,11 @@ def test_oral_preference_is_topical_but_visibly_differentiated() -> None:
     request = PenIntakeRequest.model_validate(payload)
     response = evaluate_pen_intake(request)
 
-    assert response.decision.decision_path.value == "topical_treatment"
-    assert "oral preference deferred" in response.decision.title.lower()
-    assert "oral preference was captured" in response.decision.explanation.lower()
-    assert "oral preference was captured" in " ".join(response.decision_rationale.supporting_reasons).lower()
-    assert "oral-preference deferral signal" in response.journey_views.month_0.decision_trace_badge
+    assert response.decision.decision_path.value == "oral_treatment"
+    assert "oral" in response.decision.title.lower()
+    assert "oral" in response.decision.explanation.lower()
+    assert "oral treatment selected" in response.decision_rationale.primary_reason.lower()
+    assert "RULE_ORAL_TREATMENT_PREFERENCE_SELECTED_V1" in response.trace.rules_triggered
 
 
 def test_response_contract_shape() -> None:
@@ -390,9 +390,9 @@ def test_journey_stage_text_is_temporally_distinct(name: str, mutations: dict, e
             "blood-pressure oral-exclusion safety signal",
         ),
         (
-            "topical_oral_preference_deferred",
+            "oral_treatment_selected",
             {"high_blood_pressure": False, "cardiovascular_conditions": False, "treatment_preference": "oral"},
-            "oral-preference deferral signal",
+            "oral treatment preference signal",
         ),
         (
             "support_low_consistency",
@@ -450,7 +450,11 @@ def test_frontend_adapter_mirrors_canonical_sections() -> None:
 
     assert response.frontend_adapter.evaluation.decision_path == response.decision.decision_path
     assert response.frontend_adapter.evaluation.trace_evidence == response.trace.trace_evidence
-    assert response.frontend_adapter.journey.model_dump(mode="python") == response.journey_views.model_dump(mode="python")
+    journey_dump = response.frontend_adapter.journey.model_dump(mode="python")
+    assert set(journey_dump.keys()) == {"month_0", "week_6", "month_3", "month_6"}
+    assert "hero" in journey_dump["month_0"]
+    assert "items" in journey_dump["month_0"]["progress_strip"]
+    assert "steps" in journey_dump["month_0"]["progress_photos"]
     assert set(response.model_dump(mode="python").keys()) == {
         "versions",
         "decision",

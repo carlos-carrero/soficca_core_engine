@@ -70,6 +70,15 @@ class PenIntakeRequest(BaseModel):
         elif isinstance(which_treatment_value, str) and which_treatment_value.strip() == "":
             payload["which_treatment"] = None
 
+        for nullable_bool_field in (
+            "current_medication",
+            "prior_treatment_use",
+            "had_side_effects",
+            "scalp_sensitivities",
+        ):
+            if payload.get(nullable_bool_field) is None:
+                payload[nullable_bool_field] = False
+
         return payload
 
 
@@ -122,7 +131,7 @@ class PenTrace(BaseModel):
 
     rules_evaluated: List[str]
     rules_triggered: List[str]
-    trace_evidence: List[TraceEvidence]
+    trace_evidence: Dict[str, Any]
 
 
 class JourneySection(BaseModel):
@@ -161,22 +170,106 @@ class DecisionRationale(BaseModel):
     why_not_selected: List[str]
 
 
+class FrontendJourneyHero(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    subtitle: str
+    start_date: str
+    next_review: str
+    active_plan_label: str
+
+
+class FrontendProgressStripItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    value: str
+    icon: str
+
+
+class FrontendProgressStrip(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: List[FrontendProgressStripItem]
+
+
+class FrontendPhotoStep(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    label: str
+    unlocked: bool
+
+
+class FrontendProgressPhotos(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    steps: List[FrontendPhotoStep]
+
+
+class FrontendJourneyNarrative(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    text: str
+
+
+class FrontendTreatmentDetails(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    route: str
+    cadence: str
+    purpose: str
+    review_note: Optional[str] = None
+
+
+class FrontendJourneyRecommendation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    show: bool
+    product: Optional[str] = None
+    description: Optional[str] = None
+    icon: Optional[str] = None
+    requires_medical_approval: bool = False
+    details: Optional[FrontendTreatmentDetails] = None
+
+
+class FrontendJourneyTraceBadge(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    state_label: str
+    trace_evidence: Dict[str, Any] = Field(default_factory=dict)
+
+
+class FrontendJourneyView(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    hero: FrontendJourneyHero
+    progress_strip: FrontendProgressStrip
+    progress_photos: FrontendProgressPhotos
+    narrative: FrontendJourneyNarrative
+    recommendation: FrontendJourneyRecommendation
+    decision_trace_badge: FrontendJourneyTraceBadge
+
+
 class FrontendEvaluationAdapter(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     decision_path: DecisionPath
     decision_title: str
     decision_explanation: str
-    trace_evidence: List[TraceEvidence]
+    trace_evidence: Dict[str, Any]
 
 
 class FrontendJourneyAdapter(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    month_0: JourneyView
-    week_6: JourneyView
-    month_3: JourneyView
-    month_6: JourneyView
+    month_0: FrontendJourneyView
+    week_6: FrontendJourneyView
+    month_3: FrontendJourneyView
+    month_6: FrontendJourneyView
 
 
 class FrontendAdapter(BaseModel):

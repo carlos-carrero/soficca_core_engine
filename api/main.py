@@ -229,7 +229,7 @@ app = FastAPI(title="Soficca Core API (Decision-First)", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Permite que el repo 'pen' se conecte desde cualquier Codespace o localhost
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

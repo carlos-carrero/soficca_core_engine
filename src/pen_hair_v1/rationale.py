@@ -5,6 +5,7 @@ from typing import List
 from pen_hair_v1.constants import (
     DECISION_PATH_MANUAL_REVIEW,
     DECISION_PATH_NEEDS_MORE_INFORMATION,
+    DECISION_PATH_ORAL_TREATMENT,
     DECISION_PATH_TOPICAL_TREATMENT,
     DECISION_PATH_TOPICAL_TREATMENT_WITH_SUPPORT,
 )
@@ -72,11 +73,24 @@ def build_decision_rationale(decision: PenDecision, intake: PenNormalizedIntake)
             ],
         )
 
+    if decision.decision_path.value == DECISION_PATH_ORAL_TREATMENT:
+        oral_supporting: List[str] = []
+        if intake.routine_consistency == "high":
+            oral_supporting.append("High routine consistency supports reliable oral treatment adherence.")
+        if intake.priority_factor == "efficacy":
+            oral_supporting.append("Efficacy-focused priority aligns with oral treatment outcomes.")
+        return DecisionRationale(
+            primary_reason="Oral treatment selected per explicit preference with no medical contraindications.",
+            supporting_reasons=oral_supporting or ["Oral treatment preference confirmed with no medical blockers."],
+            safety_summary=safety_summary,
+            why_not_selected=[
+                "Topical treatment was not selected; patient preference for oral treatment was respected.",
+            ],
+        )
+
     supporting: List[str] = []
     if intake.treatment_preference == "topical":
         supporting.append("Patient preference aligns with a topical pathway.")
-    if intake.treatment_preference == "oral":
-        supporting.append("Oral preference was captured, but oral treatment is intentionally not auto-selected.")
     if intake.routine_consistency == "high":
         supporting.append("Routine consistency supports reliable topical adherence.")
 

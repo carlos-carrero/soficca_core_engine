@@ -147,13 +147,13 @@ def get_pen_golden_cases() -> List[Dict[str, Any]]:
             "rationale_safety_contains": None,
         },
         {
-            "name": "oral_preference_still_topical_case",
+            "name": "oral_preference_oral_treatment_case",
             "payload": oral_preference_topical_case,
-            "decision_path": "topical_treatment",
+            "decision_path": "oral_treatment",
             "status": "DECIDED",
             "expected_flags": [],
             "expected_excluded_options": [],
-            "rationale_primary_contains": "safest deterministic starting path",
+            "rationale_primary_contains": "oral treatment selected",
             "rationale_safety_contains": None,
         },
     ]

@@ -6,7 +6,7 @@ from pen_hair_v1.constants import (
     DECISION_STATUS_NEEDS_MORE_INFO,
 )
 from pen_hair_v1.decision_contract import assert_valid_response, build_versions
-from pen_hair_v1.journey import build_journey_views
+from pen_hair_v1.journey import build_frontend_journey_views, build_journey_views
 from pen_hair_v1.normalization import normalize_intake
 from pen_hair_v1.rationale import build_decision_rationale
 from pen_hair_v1.rules import select_decision_path
@@ -72,11 +72,13 @@ def evaluate_pen_intake(payload: PenIntakeRequest) -> PenEvaluationResponse:
                 decision_explanation=decision.explanation,
                 trace_evidence=trace.trace_evidence,
             ),
-            journey=FrontendJourneyAdapter(
-                month_0=journey_views.month_0,
-                week_6=journey_views.week_6,
-                month_3=journey_views.month_3,
-                month_6=journey_views.month_6,
+            journey=build_frontend_journey_views(
+                decision_title=decision.title,
+                decision_path=decision.decision_path.value,
+                rules_triggered=selected["rules_triggered"],
+                flags=decision.flags,
+                trace_evidence=trace.trace_evidence,
+                priority_factor=normalized.priority_factor,
             ),
         ),
     )

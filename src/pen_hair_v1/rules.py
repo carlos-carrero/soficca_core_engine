@@ -5,10 +5,12 @@ from typing import Dict, List, Set
 from pen_hair_v1.constants import (
     DECISION_PATH_MANUAL_REVIEW,
     DECISION_PATH_NEEDS_MORE_INFORMATION,
+    DECISION_PATH_ORAL_TREATMENT,
     DECISION_PATH_TOPICAL_TREATMENT,
     DECISION_PATH_TOPICAL_TREATMENT_WITH_SUPPORT,
     RULE_DEFAULT_SAFEST_START,
     RULE_NEEDS_MORE_INFORMATION_UNKNOWN_INPUTS,
+    RULE_ORAL_TREATMENT_PREFERENCE_SELECTED,
     RULE_PRIOR_SIDE_EFFECTS_MANUAL_REVIEW,
     RULE_SUPPORT_PATH_COMFORT_PRIORITY,
     RULE_SUPPORT_PATH_LOW_CONSISTENCY,
@@ -86,6 +88,16 @@ def select_decision_path(intake: PenNormalizedIntake, safety: Dict[str, List[str
             "decision_path": DECISION_PATH_NEEDS_MORE_INFORMATION,
             "title": "More information needed",
             "explanation": "Decision-critical preference/consistency inputs are unknown; safe automatic selection is deferred.",
+            "rules_triggered": rules_triggered,
+            "excluded_options": excluded_options,
+        }
+
+    if intake.treatment_preference == "oral" and DECISION_PATH_ORAL_TREATMENT not in excluded_options:
+        rules_triggered.append(RULE_ORAL_TREATMENT_PREFERENCE_SELECTED)
+        return {
+            "decision_path": DECISION_PATH_ORAL_TREATMENT,
+            "title": "Oral treatment selected",
+            "explanation": "Oral treatment preference selected with no medical contraindications detected.",
             "rules_triggered": rules_triggered,
             "excluded_options": excluded_options,
         }
