@@ -29,6 +29,9 @@ from soficca_core.engine import evaluate as evaluate_decision
 
 from api.routers.dermatology_router import router as dermatology_router
 from api.routers.pen_router import router as pen_router
+from api.routers.cardio_pilot_router import router as cardio_pilot_router
+from api.routers.cardio_extract_router import router as cardio_extract_router
+from api.routers.cardio_persistence_router import router as cardio_persistence_router
 
 # -----------------------------
 # Contract: Decision Report v0.3 (JSON Schema)
@@ -305,6 +308,9 @@ def v1_cardio_report(payload: CardioReportRequest) -> Dict[str, Any]:
 
 app.include_router(dermatology_router)
 app.include_router(pen_router)
+app.include_router(cardio_pilot_router)
+app.include_router(cardio_extract_router)
+app.include_router(cardio_persistence_router)
 
 if __name__ == "__main__":
     import uvicorn
