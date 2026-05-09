@@ -16,10 +16,14 @@ The deterministic Soficca Cardio engine remains the only routing authority.
 
 from __future__ import annotations
 
+import logging
 import os
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional, Union
+
+logger = logging.getLogger("cardio_extract")
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -355,27 +359,30 @@ def sanitize_summary_and_questions(raw: Dict[str, Any]) -> List[str]:
 # ── OpenAI call ───────────────────────────────────────────────────
 
 
-def _call_openai(case_text: str, model: str) -> CardioAIRawOutput:
+def _call_openai(case_text: str, model: str, extraction_id: str) -> CardioAIRawOutput:
     """Call OpenAI with structured output parsing.
 
     Error handling:
     - Missing key → 503
     - Auth / invalid key → 503 with safe message
+    - Timeout → 504
     - Bad request / schema error → 502
     - Other provider error → 502
     - Never exposes API key or sensitive data in error messages.
     """
-    from openai import OpenAI, AuthenticationError, BadRequestError, APIError
+    from openai import OpenAI, AuthenticationError, BadRequestError, APIError, APITimeoutError
 
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
+        logger.error("[%s] OPENAI_API_KEY not configured", extraction_id)
         raise HTTPException(
             status_code=503,
             detail="OPENAI_API_KEY is not configured. AI extraction is unavailable.",
         )
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, timeout=30.0)
 
+    openai_start = time.monotonic()
     try:
         completion = client.beta.chat.completions.parse(
             model=model,
@@ -386,7 +393,18 @@ def _call_openai(case_text: str, model: str) -> CardioAIRawOutput:
             response_format=CardioAIRawOutput,
             temperature=0.1,
         )
+    except APITimeoutError:
+        openai_ms = int((time.monotonic() - openai_start) * 1000)
+        logger.error(
+            "[%s] openai_timeout | model=%s openai_elapsed_ms=%d",
+            extraction_id, model, openai_ms,
+        )
+        raise HTTPException(
+            status_code=504,
+            detail=f"OpenAI request timed out after {openai_ms}ms. Try again.",
+        )
     except AuthenticationError:
+        logger.error("[%s] openai_auth_error | model=%s", extraction_id, model)
         raise HTTPException(
             status_code=503,
             detail="OpenAI authentication failed. Check OPENAI_API_KEY configuration.",
@@ -396,24 +414,42 @@ def _call_openai(case_text: str, model: str) -> CardioAIRawOutput:
         # Strip anything that might contain the key
         if "api_key" in safe_msg.lower() or "sk-" in safe_msg:
             safe_msg = "Invalid request to OpenAI. Check model and schema configuration."
+        logger.error("[%s] openai_bad_request | model=%s detail=%s", extraction_id, model, safe_msg)
         raise HTTPException(
             status_code=502,
             detail=f"OpenAI bad request: {safe_msg}",
         )
     except APIError as e:
+        openai_ms = int((time.monotonic() - openai_start) * 1000)
+        logger.error(
+            "[%s] openai_api_error | model=%s openai_elapsed_ms=%d",
+            extraction_id, model, openai_ms,
+        )
         raise HTTPException(
             status_code=502,
             detail=f"OpenAI API error: {e.message if hasattr(e, 'message') else 'Provider error'}",
         )
     except Exception as e:
+        openai_ms = int((time.monotonic() - openai_start) * 1000)
+        logger.error(
+            "[%s] openai_unknown_error | model=%s openai_elapsed_ms=%d type=%s",
+            extraction_id, model, openai_ms, type(e).__name__,
+        )
         # Catch-all: never expose raw exception details
         raise HTTPException(
             status_code=502,
             detail="Unexpected error calling OpenAI. AI extraction is temporarily unavailable.",
         )
 
+    openai_ms = int((time.monotonic() - openai_start) * 1000)
+    logger.info(
+        "[%s] openai_ok | model=%s openai_elapsed_ms=%d",
+        extraction_id, model, openai_ms,
+    )
+
     parsed = completion.choices[0].message.parsed
     if parsed is None:
+        logger.error("[%s] openai_unparseable | model=%s", extraction_id, model)
         raise HTTPException(
             status_code=502,
             detail="OpenAI returned an unparseable response.",
@@ -432,9 +468,13 @@ def pilot_extract(payload: CardioPilotExtractRequest) -> CardioPilotExtractRespo
 
     This endpoint ONLY structures the signal. It does not route, diagnose, or prescribe.
     """
+    endpoint_start = time.monotonic()
     model = os.environ.get("CARDIO_EXTRACTION_MODEL", "gpt-4o-mini")
+    extraction_id = f"EXT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
 
-    raw_output = _call_openai(payload.case_text, model)
+    logger.info("[%s] extract_start | model=%s", extraction_id, model)
+
+    raw_output = _call_openai(payload.case_text, model, extraction_id)
 
     # Safety: strip any disallowed fields from raw dict, then re-validate
     raw_dict = raw_output.model_dump()
@@ -446,7 +486,11 @@ def pilot_extract(payload: CardioPilotExtractRequest) -> CardioPilotExtractRespo
 
     all_warnings = list(cleaned.warnings) + safety_warnings + content_warnings
 
-    extraction_id = f"EXT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
+    total_ms = int((time.monotonic() - endpoint_start) * 1000)
+    logger.info(
+        "[%s] extract_ok | model=%s confidence=%.2f total_elapsed_ms=%d",
+        extraction_id, model, cleaned.confidence, total_ms,
+    )
 
     return CardioPilotExtractResponse(
         extraction_id=extraction_id,
